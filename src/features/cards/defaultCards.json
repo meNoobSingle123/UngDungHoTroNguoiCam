@@ -1,0 +1,36 @@
+[
+  { "id": "default-an-01", "content": "Tôi muốn ăn cơm.", "topic": "Ăn uống", "icon": "utensils" },
+  { "id": "default-an-02", "content": "Tôi muốn uống nước.", "topic": "Ăn uống", "icon": "cup" },
+  { "id": "default-an-03", "content": "Tôi bị dị ứng thực phẩm.", "topic": "Ăn uống", "icon": "alert" },
+  { "id": "default-an-04", "content": "Xin cho ít cay thôi.", "topic": "Ăn uống", "icon": "flame" },
+  { "id": "default-an-05", "content": "Không bỏ hành giúp tôi.", "topic": "Ăn uống", "icon": "utensils" },
+  { "id": "default-an-06", "content": "Cho tôi xem thực đơn.", "topic": "Ăn uống", "icon": "book" },
+  { "id": "default-an-07", "content": "Tôi ăn chay.", "topic": "Ăn uống", "icon": "leaf" },
+  { "id": "default-an-08", "content": "Tính tiền giúp tôi nhé.", "topic": "Ăn uống", "icon": "receipt" },
+
+  { "id": "default-mua-01", "content": "Cái này bao nhiêu tiền?", "topic": "Mua bán", "icon": "tag" },
+  { "id": "default-mua-02", "content": "Tôi muốn mua món này.", "topic": "Mua bán", "icon": "bag" },
+  { "id": "default-mua-03", "content": "Có giảm giá không ạ?", "topic": "Mua bán", "icon": "percent" },
+  { "id": "default-mua-04", "content": "Tôi trả bằng chuyển khoản.", "topic": "Mua bán", "icon": "qr" },
+  { "id": "default-mua-05", "content": "Tôi trả bằng tiền mặt.", "topic": "Mua bán", "icon": "wallet" },
+  { "id": "default-mua-06", "content": "Cho tôi xin túi đựng.", "topic": "Mua bán", "icon": "bag" },
+  { "id": "default-mua-07", "content": "Tôi chỉ xem thôi, cảm ơn.", "topic": "Mua bán", "icon": "eye" },
+  { "id": "default-mua-08", "content": "Có cỡ khác lớn hơn không?", "topic": "Mua bán", "icon": "ruler" },
+
+  { "id": "default-di-01", "content": "Tôi muốn về nhà.", "topic": "Đi lại", "icon": "home" },
+  { "id": "default-di-02", "content": "Cho tôi xuống ở trạm này.", "topic": "Đi lại", "icon": "map-pin" },
+  { "id": "default-di-03", "content": "Nhà vệ sinh ở đâu ạ?", "topic": "Đi lại", "icon": "sign" },
+  { "id": "default-di-04", "content": "Xin bạn đợi một chút.", "topic": "Đi lại", "icon": "clock" },
+  { "id": "default-di-05", "content": "Làm ơn chỉ đường giúp tôi.", "topic": "Đi lại", "icon": "compass" },
+  { "id": "default-di-06", "content": "Tôi đi đến địa chỉ này.", "topic": "Đi lại", "icon": "navigation" },
+  { "id": "default-di-07", "content": "Xin đi chậm lại một chút.", "topic": "Đi lại", "icon": "shield" },
+
+  { "id": "default-yte-01", "content": "Tôi bị đau.", "topic": "Y tế", "icon": "heart" },
+  { "id": "default-yte-02", "content": "Xin hãy giúp tôi gọi bác sĩ.", "topic": "Y tế", "icon": "stethoscope" },
+  { "id": "default-yte-03", "content": "Tôi bị chóng mặt và khó thở.", "topic": "Y tế", "icon": "activity" },
+  { "id": "default-yte-04", "content": "Tôi cần mua thuốc.", "topic": "Y tế", "icon": "pill" },
+  { "id": "default-yte-05", "content": "Tôi bị đau bụng.", "topic": "Y tế", "icon": "heart" },
+  { "id": "default-yte-06", "content": "Tôi bị dị ứng thuốc.", "topic": "Y tế", "icon": "alert" },
+  { "id": "default-yte-07", "content": "Xin viết ra giấy giúp tôi.", "topic": "Y tế", "icon": "edit" }
+]
+

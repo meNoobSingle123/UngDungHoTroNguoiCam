@@ -1,0 +1,23 @@
+[
+  { "id": "xin_chao", "vi": "Xin chào", "group": "chao_hoi" },
+  { "id": "cam_on", "vi": "Cảm ơn", "group": "chao_hoi" },
+  { "id": "xin_loi", "vi": "Xin lỗi", "group": "chao_hoi" },
+  { "id": "toi", "vi": "Tôi", "group": "co_ban" },
+  { "id": "ban", "vi": "Bạn", "group": "co_ban" },
+  { "id": "co", "vi": "Có", "group": "co_ban" },
+  { "id": "khong", "vi": "Không", "group": "co_ban" },
+  { "id": "muon", "vi": "Muốn", "group": "co_ban" },
+  { "id": "an", "vi": "Ăn", "group": "an_uong" },
+  { "id": "uong", "vi": "Uống", "group": "an_uong" },
+  { "id": "nuoc", "vi": "Nước", "group": "an_uong" },
+  { "id": "mua", "vi": "Mua", "group": "mua_ban" },
+  { "id": "bao_nhieu", "vi": "Bao nhiêu", "group": "mua_ban" },
+  { "id": "tien", "vi": "Tiền", "group": "mua_ban" },
+  { "id": "dau", "vi": "Đau", "group": "y_te" },
+  { "id": "bac_si", "vi": "Bác sĩ", "group": "y_te" },
+  { "id": "giup_do", "vi": "Giúp đỡ", "group": "y_te" },
+  { "id": "di", "vi": "Đi", "group": "di_lai" },
+  { "id": "nha", "vi": "Nhà", "group": "di_lai" },
+  { "id": "doi", "vi": "Đợi", "group": "di_lai" }
+]
+

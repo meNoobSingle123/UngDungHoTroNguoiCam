@@ -1,0 +1,12 @@
+{
+  "name": "@sign/recognizer-plugin",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Engine-side word-locking decoder, recognizer-bundle validator, and MediaPipe LiteRT plugin adapter.",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "dependencies": {
+    "@sign/recognizer-contract": "*"
+  }
+}
+

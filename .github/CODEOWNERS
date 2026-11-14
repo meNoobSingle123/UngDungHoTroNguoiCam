@@ -1,0 +1,6 @@
+# Contract & API governance (requires dual-owner approval)
+/packages/recognizer-contract/ @ui-owner @ai-owner
+/docs/api/openapi.yaml         @ui-owner @backend-owner
+/docs/spec/words.json          @ui-owner @ai-owner
+/ml/                           @ai-owner
+

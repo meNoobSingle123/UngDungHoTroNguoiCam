@@ -1,0 +1,29 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "paths": {
+      "@/*": ["./src/*"],
+      "@/assets/*": ["./assets/*"],
+      "@sign/recognizer-contract": ["./packages/recognizer-contract/src/index.ts"],
+      "@sign/recognizer-mock": ["./packages/recognizer-mock/src/index.ts"],
+      "@sign/recognizer-mock/debug-panel": ["./packages/recognizer-mock/src/MockDebugPanel.tsx"],
+      "@sign/recognizer-plugin": ["./packages/recognizer-plugin/src/index.ts"],
+      "@sign/sentence-builder": ["./packages/sentence-builder/src/index.ts"],
+      "@sign/sign-ui": ["./packages/sign-ui/src/index.ts"],
+      "@sign/sign-ui/camera-screen": ["./packages/sign-ui/src/SignCameraScreen.tsx"]
+    }
+  },
+  "include": [
+    "app/**/*.ts",
+    "app/**/*.tsx",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "packages/**/*.ts",
+    "packages/**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
+  ]
+}

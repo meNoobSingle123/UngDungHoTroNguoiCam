@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+
+# Exclude AI and Markdown files (per user requirement)
+.agents/
+*.md
+**/*.md
+
+# Android build outputs & local config (keep android source)
+android/build/
+android/app/build/
+android/.cxx/
+android/local.properties
+android/**/build/
+android/**/.cxx/
+
+# Expo & Metro
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+.metro-health-check*
+
+# Keystores & sensitive files
+*.jks
+*.keystore
+*.p8
+*.p12
+*.key
+*.pem
+*.mobileprovision
+.env
+.env*
+.env*.local
+
+# Backend Maven target
+backend/target/
+
+# macOS & caches
+.DS_Store
+*.tsbuildinfo

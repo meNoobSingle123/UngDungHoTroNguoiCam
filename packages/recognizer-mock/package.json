@@ -1,0 +1,15 @@
+{
+  "name": "@sign/recognizer-mock",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Development-only mock RecognizerEngine and debug control panel. Must never be included in release bundles.",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./debug-panel": "./src/MockDebugPanel.tsx"
+  },
+  "dependencies": {
+    "@sign/recognizer-contract": "*"
+  }
+}
