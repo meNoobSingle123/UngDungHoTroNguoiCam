@@ -49,7 +49,7 @@ function renderDevPanel(engine: RecognizerEngine): React.ReactNode {
 
 export default function DictionaryTab(): React.ReactElement {
   const theme = useAppTheme();
-  const highContrast = useSystemStore((s) => s.highContrast);
+  const highContrast = theme.isHighContrast;
   const speechRate = useSystemStore((s) => s.speechRate);
 
   const [query, setQuery] = useState('');
@@ -82,29 +82,28 @@ export default function DictionaryTab(): React.ReactElement {
   );
 
   return (
-    <SafeAreaView edges={['top']} style={[styles.root, { backgroundColor: theme.colors.bg }]}>
+    <SafeAreaView edges={['top']} style={[styles.root, { backgroundColor: highContrast ? theme.colors.bg : '#F8FAFC' }]}>
       <TopBar title={VI_STRINGS.tabs.dictionary} />
 
-      <View style={[styles.body, { padding: theme.spacing.md, gap: theme.spacing.sm }]}>
+      <View style={styles.body}>
         {/* Banner thông báo nguyên mẫu */}
         <View
           style={[
             styles.noticeBox,
             {
               backgroundColor: highContrast ? theme.colors.surface : '#FFFBEB',
-              borderColor: highContrast ? theme.colors.border : '#FDE68A',
-              borderRadius: 14,
+              borderColor: highContrast ? theme.colors.border : '#FEF3C7',
             },
           ]}
         >
           <Ionicons
             name="information-circle-outline"
-            size={20}
+            size={18}
             color={theme.colors.warning}
           />
           <AppText
-            variant="label"
-            bold
+            variant="caption"
+            weight="500"
             color={theme.colors.warning}
             style={{ flex: 1 }}
           >
@@ -112,17 +111,17 @@ export default function DictionaryTab(): React.ReactElement {
           </AppText>
         </View>
 
-        {/* Thanh tìm kiếm */}
+        {/* Thanh tìm kiếm phong cách Soft-UI */}
         <View
           style={[
             styles.searchBar,
             {
-              backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.border,
+              backgroundColor: highContrast ? theme.colors.surface : '#FFFFFF',
+              borderColor: highContrast ? theme.colors.border : 'rgba(226, 232, 240, 0.8)',
             },
           ]}
         >
-          <Ionicons name="search-outline" size={20} color={theme.colors.textMuted} />
+          <Ionicons name="search-outline" size={18} color={theme.colors.textMuted} />
           <TextInput
             allowFontScaling={false}
             value={query}
@@ -132,24 +131,36 @@ export default function DictionaryTab(): React.ReactElement {
             style={[
               styles.searchInput,
               {
-                fontSize: theme.fonts.body,
+                fontSize: theme.fonts.subhead,
                 color: theme.colors.text,
               },
             ]}
           />
           {query.length > 0 ? (
-            <Pressable onPress={() => setQuery('')}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Xóa tìm kiếm"
+              onPress={() => setQuery('')}
+              hitSlop={8}
+            >
               <Ionicons name="close-circle" size={18} color={theme.colors.textMuted} />
             </Pressable>
           ) : null}
         </View>
 
-        {/* Danh sách từ ký hiệu */}
+        {/* Tiêu đề danh mục */}
+        <View style={styles.sectionHeaderRow}>
+          <AppText variant="caption" weight="600" color={theme.colors.textMuted}>
+            KÝ HIỆU TP.HCM ({filtered.length})
+          </AppText>
+        </View>
+
+        {/* Danh sách thẻ từ ký hiệu */}
         <FlatList
           data={filtered}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ gap: 8, paddingBottom: 24 }}
+          contentContainerStyle={styles.listContent}
           renderItem={({ item }) => (
             <Pressable
               accessibilityRole="button"
@@ -162,10 +173,10 @@ export default function DictionaryTab(): React.ReactElement {
               style={({ pressed }) => [
                 styles.wordTile,
                 {
-                  backgroundColor: theme.colors.surface,
-                  borderColor: theme.colors.border,
-                  borderRadius: 14,
-                  opacity: pressed ? 0.85 : 1,
+                  backgroundColor: highContrast ? theme.colors.surface : '#FFFFFF',
+                  borderColor: highContrast ? theme.colors.border : 'rgba(241, 245, 249, 0.9)',
+                  opacity: pressed ? 0.88 : 1,
+                  transform: [{ scale: pressed ? 0.985 : 1 }],
                 },
               ]}
             >
@@ -173,24 +184,26 @@ export default function DictionaryTab(): React.ReactElement {
                 <View
                   style={[
                     styles.wordIconBadge,
-                    { backgroundColor: highContrast ? theme.colors.bg : '#EEF2FF' },
+                    { backgroundColor: highContrast ? theme.colors.bg : '#EFF6FF' },
                   ]}
                 >
                   <Ionicons name="hand-left-outline" size={20} color={theme.colors.primary} />
                 </View>
                 <View style={styles.wordTitleCol}>
-                  <AppText variant="title" bold>
+                  <AppText variant="subhead" weight="600" color={theme.colors.text}>
                     {item.vi}
                   </AppText>
                   <View style={styles.groupBadge}>
-                    <AppText variant="label" color={theme.colors.textMuted}>
+                    <AppText variant="caption" weight="500" color={theme.colors.textMuted}>
                       {item.id} · {item.group}
                     </AppText>
                   </View>
                 </View>
               </View>
 
-              <Ionicons name="chevron-forward" size={18} color={theme.colors.textMuted} />
+              <View style={styles.tileRightAction}>
+                <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
+              </View>
             </Pressable>
           )}
         />
@@ -211,11 +224,7 @@ export default function DictionaryTab(): React.ReactElement {
             style={[
               styles.sheet,
               {
-                backgroundColor: theme.colors.bg,
-                borderTopLeftRadius: 24,
-                borderTopRightRadius: 24,
-                padding: theme.spacing.lg,
-                gap: 12,
+                backgroundColor: highContrast ? theme.colors.surface : '#FFFFFF',
               },
             ]}
           >
@@ -223,10 +232,17 @@ export default function DictionaryTab(): React.ReactElement {
             {selectedWord ? (
               <>
                 <View style={styles.detailHeader}>
-                  <AppText variant="display" bold>
-                    {selectedWord.vi}
-                  </AppText>
-                  <AppText variant="body" color={theme.colors.textMuted}>
+                  <View style={styles.detailTitleRow}>
+                    <AppText variant="title" weight="700">
+                      {selectedWord.vi}
+                    </AppText>
+                    <View style={styles.modalGroupPill}>
+                      <AppText variant="caption" weight="600" color={theme.colors.primary}>
+                        {selectedWord.group}
+                      </AppText>
+                    </View>
+                  </View>
+                  <AppText variant="caption" weight="500" color={theme.colors.textMuted}>
                     {VI_STRINGS.dictionary.handPoseFallback}
                   </AppText>
                 </View>
@@ -236,10 +252,10 @@ export default function DictionaryTab(): React.ReactElement {
                     <View style={styles.practiceStatusBox}>
                       <Ionicons
                         name="videocam-outline"
-                        size={18}
+                        size={16}
                         color={theme.colors.primary}
                       />
-                      <AppText variant="body" bold color={theme.colors.primary}>
+                      <AppText variant="caption" weight="600" color={theme.colors.primary}>
                         {VI_STRINGS.dictionary.practiceTargetPrefix} {selectedWord.vi}
                       </AppText>
                     </View>
@@ -254,10 +270,10 @@ export default function DictionaryTab(): React.ReactElement {
                       >
                         <Ionicons
                           name="checkmark-circle-outline"
-                          size={20}
+                          size={18}
                           color={theme.colors.success}
                         />
-                        <AppText variant="body" bold color={theme.colors.success}>
+                        <AppText variant="caption" weight="600" color={theme.colors.success}>
                           {VI_STRINGS.dictionary.practiceMatched}
                         </AppText>
                       </View>
@@ -277,19 +293,18 @@ export default function DictionaryTab(): React.ReactElement {
                   </View>
                 ) : null}
 
-                <View style={{ flexDirection: 'row', gap: 10 }}>
+                <View style={styles.modalBtnRow}>
                   <Pressable
                     accessibilityRole="button"
                     accessibilityLabel={VI_STRINGS.dictionary.speakWordButton}
                     onPress={() => speakVietnamese(selectedWord.vi, { rate: speechRate })}
-                    style={[
+                    style={({ pressed }) => [
                       styles.btn,
                       {
                         flex: 1,
-                        minHeight: 48,
-                        borderRadius: 14,
-                        backgroundColor: theme.colors.surface,
-                        borderColor: theme.colors.border,
+                        backgroundColor: highContrast ? theme.colors.bg : '#F8FAFC',
+                        borderColor: highContrast ? theme.colors.border : '#E2E8F0',
+                        opacity: pressed ? 0.85 : 1,
                       },
                     ]}
                   >
@@ -298,7 +313,7 @@ export default function DictionaryTab(): React.ReactElement {
                       size={18}
                       color={theme.colors.text}
                     />
-                    <AppText variant="body" bold>
+                    <AppText variant="subhead" weight="600">
                       {VI_STRINGS.dictionary.speakWordButton}
                     </AppText>
                   </Pressable>
@@ -307,14 +322,13 @@ export default function DictionaryTab(): React.ReactElement {
                     accessibilityRole="button"
                     accessibilityLabel={VI_STRINGS.dictionary.practiceButton}
                     onPress={() => setPracticing((p) => !p)}
-                    style={[
+                    style={({ pressed }) => [
                       styles.btn,
                       {
                         flex: 1,
-                        minHeight: 48,
-                        borderRadius: 14,
-                        backgroundColor: theme.colors.primary,
-                        borderColor: theme.colors.primary,
+                        backgroundColor: practicing ? theme.colors.danger : theme.colors.primary,
+                        borderColor: practicing ? theme.colors.danger : theme.colors.primary,
+                        opacity: pressed ? 0.85 : 1,
                       },
                     ]}
                   >
@@ -323,7 +337,7 @@ export default function DictionaryTab(): React.ReactElement {
                       size={18}
                       color={theme.colors.onPrimary}
                     />
-                    <AppText variant="body" bold color={theme.colors.onPrimary}>
+                    <AppText variant="subhead" weight="600" color={theme.colors.onPrimary}>
                       {practicing
                         ? VI_STRINGS.dictionary.stopPracticeButton
                         : VI_STRINGS.dictionary.practiceButton}
@@ -338,17 +352,16 @@ export default function DictionaryTab(): React.ReactElement {
                     setPracticing(false);
                     setSelectedWord(null);
                   }}
-                  style={[
+                  style={({ pressed }) => [
                     styles.btn,
                     {
-                      minHeight: 48,
-                      borderRadius: 14,
-                      backgroundColor: theme.colors.surface,
-                      borderColor: theme.colors.border,
+                      backgroundColor: highContrast ? theme.colors.bg : '#F1F5F9',
+                      borderColor: 'transparent',
+                      opacity: pressed ? 0.85 : 1,
                     },
                   ]}
                 >
-                  <AppText variant="body" bold>
+                  <AppText variant="subhead" weight="600" color={theme.colors.textMuted}>
                     {VI_STRINGS.communicate.closeButton}
                   </AppText>
                 </Pressable>
@@ -363,72 +376,102 @@ export default function DictionaryTab(): React.ReactElement {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  body: { flex: 1 },
+  body: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    gap: 12,
+  },
   noticeBox: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
     borderWidth: 1,
-    padding: 10,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
     borderWidth: 1,
-    borderRadius: 16,
+    borderRadius: 18,
     paddingHorizontal: 14,
-    minHeight: 48,
+    height: 48,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    elevation: 2,
   },
   searchInput: {
     flex: 1,
-    paddingVertical: 10,
+    paddingVertical: 8,
+  },
+  sectionHeaderRow: {
+    paddingHorizontal: 4,
+    paddingTop: 4,
+  },
+  listContent: {
+    gap: 10,
+    paddingBottom: 100, // accommodate Floating Island Dock
   },
   wordTile: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     borderWidth: 1,
+    borderRadius: 20,
     padding: 14,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.04,
-    shadowRadius: 2,
-    elevation: 1,
+    shadowRadius: 12,
+    elevation: 2,
   },
   wordTileLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    flex: 1,
   },
   wordIconBadge: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
   },
   wordTitleCol: {
     gap: 2,
+    flex: 1,
   },
   groupBadge: {
     alignSelf: 'flex-start',
   },
+  tileRightAction: {
+    paddingLeft: 8,
+  },
   sheetBackdrop: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(15, 23, 42, 0.45)',
   },
   sheet: {
-    maxHeight: '88%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -3 },
+    maxHeight: '90%',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    padding: 20,
+    gap: 16,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 10,
+    shadowRadius: 20,
+    elevation: 12,
   },
   sheetHandleBar: {
-    width: 40,
+    width: 38,
     height: 4,
     borderRadius: 2,
     backgroundColor: '#CBD5E1',
@@ -436,10 +479,21 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   detailHeader: {
-    gap: 4,
+    gap: 6,
+  },
+  detailTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  modalGroupPill: {
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
   },
   practiceStage: {
-    gap: 8,
+    gap: 10,
   },
   practiceStatusBox: {
     flexDirection: 'row',
@@ -450,20 +504,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    padding: 8,
-    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
   },
   cameraBox: {
     minHeight: 250,
-    borderRadius: 16,
+    borderRadius: 20,
     overflow: 'hidden',
+  },
+  modalBtnRow: {
+    flexDirection: 'row',
+    gap: 10,
   },
   btn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
+    gap: 8,
+    minHeight: 48,
+    borderRadius: 16,
     borderWidth: 1,
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
   },
 });

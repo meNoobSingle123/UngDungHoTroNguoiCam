@@ -14,7 +14,7 @@ import { CameraModal } from '../../src/features/camera/CameraModal.tsx';
 export default function CommunicateTab(): React.ReactElement {
   useKeepAwake();
   const theme = useAppTheme();
-  const highContrast = useSystemStore((s) => s.highContrast);
+  const highContrast = theme.isHighContrast;
   const history = useSystemStore((s) => s.history);
   const speechRate = useSystemStore((s) => s.speechRate);
   const isFlipped180 = useSystemStore((s) => s.isFlipped180);
@@ -45,41 +45,58 @@ export default function CommunicateTab(): React.ReactElement {
   };
 
   return (
-    <SafeAreaView edges={['top']} style={[styles.root, { backgroundColor: theme.colors.bg }]}>
+    <SafeAreaView edges={['top']} style={[styles.root, { backgroundColor: highContrast ? theme.colors.bg : '#F8FAFC' }]}>
       <TopBar title={VI_STRINGS.tabs.communicate} />
 
-      <View style={[styles.body, { padding: theme.spacing.md, gap: theme.spacing.sm }]}>
-        {/* Khung Hội thoại Tương tác */}
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Thẻ Hội thoại Tương tác (Dialogue Card) */}
         <View
           style={[
-            styles.conversationFrame,
+            styles.conversationCard,
             {
-              backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.border,
-              borderRadius: 16,
+              backgroundColor: highContrast ? theme.colors.surface : '#FFFFFF',
+              borderColor: highContrast ? theme.colors.border : 'rgba(226, 232, 240, 0.7)',
             },
           ]}
         >
-          <ScrollView
-            contentContainerStyle={styles.conversationScroll}
-            showsVerticalScrollIndicator={false}
-          >
+          <View style={styles.cardHeaderRow}>
+            <View style={styles.headerTitleLeft}>
+              <Ionicons name="chatbubbles-outline" size={16} color={theme.colors.primary} />
+              <AppText variant="caption" weight="600" color={theme.colors.textMuted}>
+                HỘI THOẠI TRỰC TIẾP
+              </AppText>
+            </View>
+            {isFlipped180 ? (
+              <View style={styles.flipBadge}>
+                <Ionicons name="sync" size={11} color={theme.colors.primary} />
+                <AppText variant="caption" weight="600" color={theme.colors.primary}>
+                  Đang lật 180°
+                </AppText>
+              </View>
+            ) : null}
+          </View>
+
+          <View style={styles.dialogueBody}>
             {recentEntries.length === 0 ? (
-              <View style={styles.emptyState}>
+              <View style={styles.emptyDialogue}>
                 <View
                   style={[
                     styles.emptyIconCircle,
-                    { backgroundColor: highContrast ? theme.colors.surface : '#E0E7FF' },
+                    { backgroundColor: highContrast ? theme.colors.surface : '#EFF6FF' },
                   ]}
                 >
                   <Ionicons
                     name="chatbubble-ellipses-outline"
-                    size={28}
+                    size={24}
                     color={theme.colors.primary}
                   />
                 </View>
                 <AppText
-                  variant="body"
+                  variant="caption"
+                  weight="500"
                   color={theme.colors.textMuted}
                   style={styles.emptyText}
                 >
@@ -94,8 +111,8 @@ export default function CommunicateTab(): React.ReactElement {
                   <View
                     key={item.id}
                     style={[
-                      styles.bubbleWrapper,
-                      isMe ? styles.bubbleMeWrapper : styles.bubbleOtherWrapper,
+                      styles.bubbleRow,
+                      isMe ? styles.bubbleRowMe : styles.bubbleRowOther,
                       isFlipped180 ? { transform: [{ rotate: '180deg' }] } : undefined,
                     ]}
                   >
@@ -109,28 +126,23 @@ export default function CommunicateTab(): React.ReactElement {
                               : '#EEF2FF'
                             : highContrast
                               ? theme.colors.surface
-                              : '#FFFFFF',
-                          borderColor: isMe ? theme.colors.primary : theme.colors.border,
+                              : '#F1F5F9',
+                          borderColor: isMe ? theme.colors.primary : 'transparent',
                         },
                       ]}
                     >
-                      <View style={styles.speakerRow}>
-                        <Ionicons
-                          name={isMe ? 'person-circle-outline' : 'chatbubble-outline'}
-                          size={14}
-                          color={isMe ? theme.colors.primary : theme.colors.textMuted}
-                        />
+                      <View style={styles.speakerTag}>
                         <AppText
-                          variant="label"
-                          bold
+                          variant="caption"
+                          weight="600"
                           color={isMe ? theme.colors.primary : theme.colors.textMuted}
                         >
                           {isMe ? 'Tôi' : 'Người đối diện'}
                         </AppText>
                       </View>
                       <AppText
-                        variant={isNewest ? 'conversation' : 'title'}
-                        bold={isNewest}
+                        variant={isNewest ? 'subhead' : 'body'}
+                        weight={isNewest ? '600' : '500'}
                         color={isMe ? theme.colors.text : theme.colors.primary}
                       >
                         {item.text}
@@ -140,38 +152,38 @@ export default function CommunicateTab(): React.ReactElement {
                 );
               })
             )}
-          </ScrollView>
+          </View>
 
-          {/* Thanh công cụ hội thoại nhanh */}
-          <View style={[styles.frameActions, { borderTopColor: theme.colors.border }]}>
+          {/* Thanh công cụ hội thoại */}
+          <View style={[styles.dialogueToolbar, { borderTopColor: highContrast ? theme.colors.border : '#F1F5F9' }]}>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={VI_STRINGS.communicate.flip180}
               onPress={toggleFlip180}
               style={({ pressed }) => [
-                styles.smallAction,
+                styles.toolPill,
                 {
-                  borderRadius: 12,
-                  borderColor: isFlipped180 ? theme.colors.primary : theme.colors.border,
                   backgroundColor: isFlipped180
                     ? highContrast
                       ? theme.colors.surface
                       : '#EEF2FF'
-                    : theme.colors.bg,
-                  opacity: pressed ? 0.75 : 1,
+                    : highContrast
+                      ? theme.colors.surface
+                      : '#F8FAFC',
+                  borderColor: isFlipped180 ? theme.colors.primary : 'transparent',
+                  opacity: pressed ? 0.8 : 1,
                 },
               ]}
             >
               <Ionicons
                 name="sync-outline"
-                size={16}
+                size={14}
                 color={isFlipped180 ? theme.colors.primary : theme.colors.text}
               />
               <AppText
-                variant="label"
-                bold
+                variant="caption"
+                weight="600"
                 color={isFlipped180 ? theme.colors.primary : theme.colors.text}
-                numberOfLines={1}
               >
                 {VI_STRINGS.communicate.flip180}
               </AppText>
@@ -183,17 +195,15 @@ export default function CommunicateTab(): React.ReactElement {
               disabled={!latestMe}
               onPress={() => latestMe && speakVietnamese(latestMe.text, { rate: speechRate })}
               style={({ pressed }) => [
-                styles.smallAction,
+                styles.toolPill,
                 {
-                  borderRadius: 12,
-                  borderColor: theme.colors.border,
-                  backgroundColor: theme.colors.bg,
-                  opacity: !latestMe ? 0.4 : pressed ? 0.75 : 1,
+                  backgroundColor: highContrast ? theme.colors.surface : '#F8FAFC',
+                  opacity: !latestMe ? 0.35 : pressed ? 0.8 : 1,
                 },
               ]}
             >
-              <Ionicons name="volume-medium-outline" size={16} color={theme.colors.text} />
-              <AppText variant="label" bold numberOfLines={1}>
+              <Ionicons name="volume-medium-outline" size={14} color={theme.colors.text} />
+              <AppText variant="caption" weight="600">
                 {VI_STRINGS.communicate.replay}
               </AppText>
             </Pressable>
@@ -203,29 +213,31 @@ export default function CommunicateTab(): React.ReactElement {
               accessibilityLabel={VI_STRINGS.communicate.clear}
               onPress={clearHistory}
               style={({ pressed }) => [
-                styles.smallAction,
+                styles.toolPill,
                 {
-                  borderRadius: 12,
-                  borderColor: theme.colors.border,
-                  backgroundColor: theme.colors.bg,
-                  opacity: recentEntries.length === 0 ? 0.4 : pressed ? 0.75 : 1,
+                  backgroundColor: highContrast ? theme.colors.surface : '#F8FAFC',
+                  opacity: recentEntries.length === 0 ? 0.35 : pressed ? 0.8 : 1,
                 },
               ]}
             >
-              <Ionicons name="trash-outline" size={16} color={theme.colors.danger} />
-              <AppText variant="label" bold color={theme.colors.danger} numberOfLines={1}>
+              <Ionicons name="trash-outline" size={14} color={theme.colors.danger} />
+              <AppText variant="caption" weight="600" color={theme.colors.danger}>
                 {VI_STRINGS.communicate.clear}
               </AppText>
             </Pressable>
           </View>
         </View>
 
-        {/* Dãy chip phản hồi nhanh */}
-        <View style={styles.quickReplyContainer}>
+        {/* Section: Phản hồi nhanh */}
+        <View style={styles.sectionWrapper}>
+          <AppText variant="caption" weight="600" color={theme.colors.textMuted} style={styles.sectionLabel}>
+            CÂU PHẢN HỒI NHANH
+          </AppText>
+
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.quickReplyScroll}
+            contentContainerStyle={styles.quickChipsScroll}
           >
             {[...VI_STRINGS.communicate.quickReplies, ...pinnedCards.map((c) => c.content)].map(
               (phrase, idx) => (
@@ -235,18 +247,16 @@ export default function CommunicateTab(): React.ReactElement {
                   accessibilityLabel={phrase}
                   onPress={() => speakAndRecord(phrase)}
                   style={({ pressed }) => [
-                    styles.quickChip,
+                    styles.quickPill,
                     {
-                      minHeight: 48,
-                      borderRadius: 24,
                       backgroundColor: highContrast ? theme.colors.surface : '#FFFFFF',
-                      borderColor: theme.colors.border,
-                      opacity: pressed ? 0.8 : 1,
+                      borderColor: highContrast ? theme.colors.border : 'rgba(226, 232, 240, 0.8)',
+                      opacity: pressed ? 0.85 : 1,
                     },
                   ]}
                 >
-                  <Ionicons name="flash-outline" size={15} color={theme.colors.primary} />
-                  <AppText variant="body" bold numberOfLines={1}>
+                  <Ionicons name="flash" size={12} color={theme.colors.primary} />
+                  <AppText variant="caption" weight="600" color={theme.colors.text}>
                     {phrase}
                   </AppText>
                 </Pressable>
@@ -255,80 +265,80 @@ export default function CommunicateTab(): React.ReactElement {
           </ScrollView>
         </View>
 
-        {/* Cụm 3 nút hành động chính */}
-        <View style={[styles.bigActionsCol, { gap: 10 }]}>
-          {/* Nút Hero: Cử chỉ của tôi */}
+        {/* Section: Chọn cách giao tiếp */}
+        <View style={styles.sectionWrapper}>
+          <AppText variant="caption" weight="600" color={theme.colors.textMuted} style={styles.sectionLabel}>
+            CÁCH GIAO TIẾP
+          </AppText>
+
+          {/* Hero Card: Cử chỉ của tôi */}
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={VI_STRINGS.communicate.actions.mySign}
             testID="open-camera-btn"
             onPress={() => setCameraOpen(true)}
             style={({ pressed }) => [
-              styles.heroAction,
+              styles.heroCard,
               {
-                borderRadius: 18,
                 backgroundColor: theme.colors.primary,
-                opacity: pressed ? 0.9 : 1,
+                opacity: pressed ? 0.92 : 1,
               },
             ]}
           >
             <View style={styles.heroLeft}>
-              <View
-                style={[
-                  styles.heroIconCircle,
-                  { backgroundColor: highContrast ? '#000000' : 'rgba(255,255,255,0.2)' },
-                ]}
-              >
+              <View style={styles.heroIconBadge}>
                 <Ionicons
-                  name="hand-right-outline"
-                  size={26}
+                  name="hand-right"
+                  size={24}
                   color={theme.colors.onPrimary}
                 />
               </View>
               <View style={styles.heroTextCol}>
-                <AppText variant="title" bold color={theme.colors.onPrimary}>
+                <AppText variant="subhead" weight="700" color={theme.colors.onPrimary}>
                   {VI_STRINGS.communicate.actions.mySign}
                 </AppText>
                 <AppText
-                  variant="label"
+                  variant="caption"
+                  weight="400"
                   color={highContrast ? theme.colors.onPrimary : 'rgba(255,255,255,0.85)'}
                 >
                   Mở camera nhận diện ký hiệu
                 </AppText>
               </View>
             </View>
-            <Ionicons name="chevron-forward" size={22} color={theme.colors.onPrimary} />
+            <View style={styles.heroChevronCircle}>
+              <Ionicons name="chevron-forward" size={16} color={theme.colors.onPrimary} />
+            </View>
           </Pressable>
 
-          {/* 2 nút phụ cột đôi */}
-          <View style={styles.twoCols}>
+          {/* 2 Companion Action Tiles */}
+          <View style={styles.twoActionRow}>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={VI_STRINGS.communicate.actions.typeText}
               testID="open-type-sheet-btn"
               onPress={() => setTypeSheetOpen(true)}
               style={({ pressed }) => [
-                styles.subAction,
+                styles.actionTile,
                 {
-                  borderRadius: 16,
-                  backgroundColor: theme.colors.surface,
-                  borderColor: theme.colors.border,
-                  opacity: pressed ? 0.8 : 1,
+                  backgroundColor: highContrast ? theme.colors.surface : '#FFFFFF',
+                  borderColor: highContrast ? theme.colors.border : 'rgba(226, 232, 240, 0.8)',
+                  opacity: pressed ? 0.85 : 1,
                 },
               ]}
             >
               <View
                 style={[
-                  styles.subIconBadge,
-                  { backgroundColor: highContrast ? theme.colors.bg : '#E0E7FF' },
+                  styles.tileIconCircle,
+                  { backgroundColor: highContrast ? theme.colors.bg : '#EEF2FF' },
                 ]}
               >
-                <Ionicons name="keypad-outline" size={22} color={theme.colors.primary} />
+                <Ionicons name="keypad" size={20} color={theme.colors.primary} />
               </View>
-              <AppText variant="body" bold style={styles.centerText}>
+              <AppText variant="subhead" weight="600" style={styles.centerText}>
                 {VI_STRINGS.communicate.actions.typeText}
               </AppText>
-              <AppText variant="label" color={theme.colors.textMuted} style={styles.centerText}>
+              <AppText variant="caption" weight="400" color={theme.colors.textMuted} style={styles.centerText}>
                 Gõ chữ phát giọng
               </AppText>
             </Pressable>
@@ -339,37 +349,36 @@ export default function CommunicateTab(): React.ReactElement {
               testID="open-other-sheet-btn"
               onPress={() => setOtherSheetOpen(true)}
               style={({ pressed }) => [
-                styles.subAction,
+                styles.actionTile,
                 {
-                  borderRadius: 16,
-                  backgroundColor: theme.colors.surface,
-                  borderColor: theme.colors.border,
-                  opacity: pressed ? 0.8 : 1,
+                  backgroundColor: highContrast ? theme.colors.surface : '#FFFFFF',
+                  borderColor: highContrast ? theme.colors.border : 'rgba(226, 232, 240, 0.8)',
+                  opacity: pressed ? 0.85 : 1,
                 },
               ]}
             >
               <View
                 style={[
-                  styles.subIconBadge,
+                  styles.tileIconCircle,
                   { backgroundColor: highContrast ? theme.colors.bg : '#FEF3C7' },
                 ]}
               >
-                <Ionicons name="mic-outline" size={22} color={theme.colors.warning} />
+                <Ionicons name="mic" size={20} color={theme.colors.warning} />
               </View>
-              <AppText variant="body" bold style={styles.centerText}>
+              <AppText variant="subhead" weight="600" style={styles.centerText}>
                 {VI_STRINGS.communicate.actions.otherSpeaks}
               </AppText>
-              <AppText variant="label" color={theme.colors.textMuted} style={styles.centerText}>
+              <AppText variant="caption" weight="400" color={theme.colors.textMuted} style={styles.centerText}>
                 Người đối diện nói
               </AppText>
             </Pressable>
           </View>
         </View>
-      </View>
+      </ScrollView>
 
       <CameraModal visible={cameraOpen} onClose={() => setCameraOpen(false)} />
 
-      {/* Sheet: Gõ phím */}
+      {/* Sheet Gõ phím */}
       <Modal
         visible={typeSheetOpen}
         transparent
@@ -382,15 +391,15 @@ export default function CommunicateTab(): React.ReactElement {
               styles.sheet,
               {
                 backgroundColor: theme.colors.bg,
-                borderTopLeftRadius: 24,
-                borderTopRightRadius: 24,
+                borderTopLeftRadius: 28,
+                borderTopRightRadius: 28,
                 padding: theme.spacing.lg,
-                gap: theme.spacing.md,
+                gap: 12,
               },
             ]}
           >
             <View style={styles.sheetHandleBar} />
-            <AppText variant="title" bold>
+            <AppText variant="title" weight="700">
               {VI_STRINGS.communicate.typeSheetTitle}
             </AppText>
             <TextInput
@@ -408,11 +417,11 @@ export default function CommunicateTab(): React.ReactElement {
                   color: theme.colors.text,
                   borderColor: theme.colors.border,
                   backgroundColor: theme.colors.surface,
-                  borderRadius: 14,
+                  borderRadius: 16,
                 },
               ]}
             />
-            <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
+            <View style={{ flexDirection: 'row', gap: 10 }}>
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={VI_STRINGS.communicate.closeButton}
@@ -421,15 +430,15 @@ export default function CommunicateTab(): React.ReactElement {
                   styles.sheetBtn,
                   {
                     flex: 1,
-                    minHeight: theme.dimensions.primaryActionMinHeight,
-                    borderRadius: 14,
+                    minHeight: 48,
+                    borderRadius: 16,
                     backgroundColor: theme.colors.surface,
                     borderColor: theme.colors.border,
                     borderWidth: 1,
                   },
                 ]}
               >
-                <AppText variant="body" bold>
+                <AppText variant="body" weight="600">
                   {VI_STRINGS.communicate.closeButton}
                 </AppText>
               </Pressable>
@@ -445,14 +454,14 @@ export default function CommunicateTab(): React.ReactElement {
                   styles.sheetBtn,
                   {
                     flex: 1,
-                    minHeight: theme.dimensions.primaryActionMinHeight,
-                    borderRadius: 14,
+                    minHeight: 48,
+                    borderRadius: 16,
                     backgroundColor: theme.colors.primary,
                   },
                 ]}
               >
-                <Ionicons name="volume-high-outline" size={18} color={theme.colors.onPrimary} />
-                <AppText variant="body" bold color={theme.colors.onPrimary}>
+                <Ionicons name="volume-high" size={18} color={theme.colors.onPrimary} />
+                <AppText variant="body" weight="600" color={theme.colors.onPrimary}>
                   {VI_STRINGS.communicate.speakButton}
                 </AppText>
               </Pressable>
@@ -461,7 +470,7 @@ export default function CommunicateTab(): React.ReactElement {
         </View>
       </Modal>
 
-      {/* Sheet: Người kia nói */}
+      {/* Sheet Người kia nói */}
       <Modal
         visible={otherSheetOpen}
         transparent
@@ -474,21 +483,21 @@ export default function CommunicateTab(): React.ReactElement {
               styles.sheet,
               {
                 backgroundColor: theme.colors.bg,
-                borderTopLeftRadius: 24,
-                borderTopRightRadius: 24,
+                borderTopLeftRadius: 28,
+                borderTopRightRadius: 28,
                 padding: theme.spacing.lg,
-                gap: theme.spacing.md,
+                gap: 12,
               },
             ]}
           >
             <View style={styles.sheetHandleBar} />
-            <AppText variant="title" bold>
+            <AppText variant="title" weight="700">
               {VI_STRINGS.communicate.otherSpeakTitle}
             </AppText>
-            <AppText variant="body" color={theme.colors.textMuted}>
+            <AppText variant="caption" color={theme.colors.textMuted}>
               {VI_STRINGS.communicate.noisyPlaceHint}
             </AppText>
-            <AppText variant="label" color={theme.colors.warning}>
+            <AppText variant="caption" weight="600" color={theme.colors.warning}>
               {VI_STRINGS.communicate.otherSpeakOfflineHint}
             </AppText>
             <TextInput
@@ -506,11 +515,11 @@ export default function CommunicateTab(): React.ReactElement {
                   color: theme.colors.text,
                   borderColor: theme.colors.border,
                   backgroundColor: theme.colors.surface,
-                  borderRadius: 14,
+                  borderRadius: 16,
                 },
               ]}
             />
-            <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
+            <View style={{ flexDirection: 'row', gap: 10 }}>
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={VI_STRINGS.communicate.closeButton}
@@ -519,15 +528,15 @@ export default function CommunicateTab(): React.ReactElement {
                   styles.sheetBtn,
                   {
                     flex: 1,
-                    minHeight: theme.dimensions.primaryActionMinHeight,
-                    borderRadius: 14,
+                    minHeight: 48,
+                    borderRadius: 16,
                     backgroundColor: theme.colors.surface,
                     borderColor: theme.colors.border,
                     borderWidth: 1,
                   },
                 ]}
               >
-                <AppText variant="body" bold>
+                <AppText variant="body" weight="600">
                   {VI_STRINGS.communicate.closeButton}
                 </AppText>
               </Pressable>
@@ -545,13 +554,13 @@ export default function CommunicateTab(): React.ReactElement {
                   styles.sheetBtn,
                   {
                     flex: 1,
-                    minHeight: theme.dimensions.primaryActionMinHeight,
-                    borderRadius: 14,
+                    minHeight: 48,
+                    borderRadius: 16,
                     backgroundColor: theme.colors.primary,
                   },
                 ]}
               >
-                <AppText variant="body" bold color={theme.colors.onPrimary}>
+                <AppText variant="body" weight="600" color={theme.colors.onPrimary}>
                   {VI_STRINGS.communicate.otherReplySubmit}
                 </AppText>
               </Pressable>
@@ -565,154 +574,192 @@ export default function CommunicateTab(): React.ReactElement {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  body: { flex: 1 },
-  conversationFrame: {
-    flex: 1,
+  scrollContent: {
+    padding: 16,
+    gap: 14,
+    paddingBottom: 96,
+  },
+  conversationCard: {
+    borderRadius: 22,
     borderWidth: 1,
-    justifyContent: 'space-between',
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowRadius: 16,
+    elevation: 3,
   },
-  conversationScroll: {
-    padding: 14,
-    gap: 10,
-    flexGrow: 1,
-    justifyContent: 'flex-start',
+  cardHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 6,
   },
-  emptyState: {
-    flex: 1,
+  headerTitleLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  flipBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+  },
+  dialogueBody: {
+    minHeight: 120,
+    maxHeight: 200,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    justifyContent: 'center',
+  },
+  emptyDialogue: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 24,
-    gap: 10,
+    paddingVertical: 16,
+    gap: 8,
   },
   emptyIconCircle: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
   },
   emptyText: {
     textAlign: 'center',
     maxWidth: 240,
+    lineHeight: 18,
   },
-  bubbleWrapper: {
+  bubbleRow: {
     width: '100%',
+    marginVertical: 3,
   },
-  bubbleMeWrapper: {
+  bubbleRowMe: {
     alignItems: 'flex-start',
   },
-  bubbleOtherWrapper: {
+  bubbleRowOther: {
     alignItems: 'flex-start',
   },
   bubble: {
-    borderWidth: 1,
-    borderRadius: 14,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    gap: 4,
+    borderRadius: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    gap: 2,
     maxWidth: '92%',
   },
-  speakerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
+  speakerTag: {
+    marginBottom: 1,
   },
-  frameActions: {
+  dialogueToolbar: {
     flexDirection: 'row',
     gap: 8,
     padding: 10,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    backgroundColor: 'rgba(0,0,0,0.015)',
+    borderTopWidth: 1,
+    backgroundColor: 'rgba(248, 250, 252, 0.7)',
   },
-  smallAction: {
+  toolPill: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
-    minHeight: 44,
+    gap: 5,
+    height: 38,
+    borderRadius: 12,
     borderWidth: 1,
-    paddingHorizontal: 8,
+    borderColor: 'transparent',
   },
-  quickReplyContainer: {
-    marginVertical: 2,
+  sectionWrapper: {
+    gap: 6,
   },
-  quickReplyScroll: {
+  sectionLabel: {
+    paddingHorizontal: 4,
+    letterSpacing: 0.6,
+  },
+  quickChipsScroll: {
     gap: 8,
-    alignItems: 'center',
     paddingVertical: 2,
   },
-  quickChip: {
+  quickPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
+    height: 40,
+    borderRadius: 20,
     borderWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
-    shadowRadius: 2,
-    elevation: 1,
+    shadowRadius: 6,
+    elevation: 2,
   },
-  bigActionsCol: {
-    marginTop: 2,
-  },
-  heroAction: {
-    minHeight: 76,
+  heroCard: {
+    height: 72,
+    borderRadius: 20,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 18,
-    paddingVertical: 12,
+    paddingHorizontal: 16,
     shadowColor: '#1D4ED8',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.22,
+    shadowRadius: 14,
     elevation: 4,
   },
   heroLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
+    gap: 12,
   },
-  heroIconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+  heroIconBadge: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.2)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   heroTextCol: {
-    gap: 2,
+    gap: 1,
   },
-  twoCols: {
+  heroChevronCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  twoActionRow: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 12,
+    marginTop: 6,
   },
-  subAction: {
+  actionTile: {
     flex: 1,
-    minHeight: 104,
+    height: 104,
+    borderRadius: 20,
     borderWidth: 1,
     padding: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    gap: 2,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.04,
-    shadowRadius: 3,
+    shadowRadius: 12,
     elevation: 2,
   },
-  subIconBadge: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  tileIconCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 4,
@@ -722,29 +769,29 @@ const styles = StyleSheet.create({
   },
   sheetBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
     justifyContent: 'flex-end',
   },
   sheet: {
     minHeight: 320,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 10,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 20,
+    elevation: 12,
   },
   sheetHandleBar: {
-    width: 40,
+    width: 36,
     height: 4,
     borderRadius: 2,
     backgroundColor: '#CBD5E1',
     alignSelf: 'center',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   input: {
     borderWidth: 1,
     padding: 14,
-    minHeight: 120,
+    minHeight: 110,
     textAlignVertical: 'top',
   },
   sheetBtn: {

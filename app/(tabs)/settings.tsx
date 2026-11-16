@@ -22,7 +22,7 @@ const SPEECH_RATES = [0.75, 1.0, 1.25, 1.5] as const;
 
 export default function SettingsTab(): React.ReactElement {
   const theme = useAppTheme();
-  const highContrast = useSystemStore((s) => s.highContrast);
+  const highContrast = theme.isHighContrast;
   const fontLevel = useSystemStore((s) => s.fontLevel);
   const speechRate = useSystemStore((s) => s.speechRate);
   const emergencyInfo = useSystemStore((s) => s.emergencyInfo);
@@ -47,11 +47,11 @@ export default function SettingsTab(): React.ReactElement {
   };
 
   return (
-    <SafeAreaView edges={['top']} style={[styles.root, { backgroundColor: theme.colors.bg }]}>
+    <SafeAreaView edges={['top']} style={[styles.root, { backgroundColor: highContrast ? theme.colors.bg : '#F8FAFC' }]}>
       <TopBar title={VI_STRINGS.tabs.settings} />
 
       <ScrollView
-        contentContainerStyle={{ padding: theme.spacing.md, gap: 14, paddingBottom: 36 }}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         {onboardingStatus === 'skipped' ? (
@@ -61,14 +61,13 @@ export default function SettingsTab(): React.ReactElement {
               styles.card,
               {
                 backgroundColor: highContrast ? theme.colors.surface : '#FFFBEB',
-                borderColor: highContrast ? theme.colors.border : '#FDE68A',
-                borderRadius: 16,
+                borderColor: highContrast ? theme.colors.border : '#FEF3C7',
               },
             ]}
           >
             <View style={styles.sectionHeaderRow}>
               <Ionicons name="information-circle" size={20} color={theme.colors.warning} />
-              <AppText variant="body" bold color={theme.colors.warning} style={{ flex: 1 }}>
+              <AppText variant="subhead" weight="600" color={theme.colors.warning} style={{ flex: 1 }}>
                 {VI_STRINGS.settings.onboardingReminder}
               </AppText>
             </View>
@@ -76,15 +75,15 @@ export default function SettingsTab(): React.ReactElement {
               accessibilityRole="button"
               accessibilityLabel={VI_STRINGS.settings.openOnboardingButton}
               onPress={() => setOnboardingOpen(true)}
-              style={[
+              style={({ pressed }) => [
                 styles.primaryBtn,
                 {
-                  borderRadius: 14,
                   backgroundColor: theme.colors.primary,
+                  opacity: pressed ? 0.88 : 1,
                 },
               ]}
             >
-              <AppText variant="label" bold color={theme.colors.onPrimary}>
+              <AppText variant="label" weight="600" color={theme.colors.onPrimary}>
                 {VI_STRINGS.settings.openOnboardingButton}
               </AppText>
             </Pressable>
@@ -93,7 +92,7 @@ export default function SettingsTab(): React.ReactElement {
 
         {/* Nhóm 1: Giao diện & Kích thước chữ */}
         <View style={styles.groupWrapper}>
-          <AppText variant="label" bold color={theme.colors.textMuted} style={styles.groupLabel}>
+          <AppText variant="caption" weight="600" color={theme.colors.textMuted} style={styles.groupLabel}>
             HIỂN THỊ & GIAO DIỆN
           </AppText>
 
@@ -101,17 +100,23 @@ export default function SettingsTab(): React.ReactElement {
             style={[
               styles.card,
               {
-                backgroundColor: theme.colors.surface,
-                borderColor: theme.colors.border,
-                borderRadius: 16,
+                backgroundColor: highContrast ? theme.colors.surface : '#FFFFFF',
+                borderColor: highContrast ? theme.colors.border : 'rgba(241, 245, 249, 0.9)',
               },
             ]}
           >
             <View style={styles.sectionHeaderRow}>
-              <Ionicons name="text-outline" size={20} color={theme.colors.primary} />
-              <AppText variant="title" bold>
-                {VI_STRINGS.settings.fontScaleTitle}
-              </AppText>
+              <View style={[styles.sectionIconBadge, { backgroundColor: highContrast ? theme.colors.bg : '#EFF6FF' }]}>
+                <Ionicons name="text-outline" size={18} color={theme.colors.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <AppText variant="subhead" weight="600">
+                  {VI_STRINGS.settings.fontScaleTitle}
+                </AppText>
+                <AppText variant="caption" weight="500" color={theme.colors.textMuted}>
+                  Tùy chỉnh độ lớn chữ trên toàn ứng dụng
+                </AppText>
+              </View>
             </View>
 
             {/* Bộ chọn phân đoạn cỡ chữ */}
@@ -119,7 +124,7 @@ export default function SettingsTab(): React.ReactElement {
               style={[
                 styles.segmentedRow,
                 {
-                  backgroundColor: highContrast ? theme.colors.bg : '#E2E8F0',
+                  backgroundColor: highContrast ? theme.colors.bg : '#F1F5F9',
                 },
               ]}
             >
@@ -134,17 +139,23 @@ export default function SettingsTab(): React.ReactElement {
                     onPress={() => setFontLevel(lvl)}
                     style={[
                       styles.segmentBtn,
-                      {
-                        backgroundColor: active
-                          ? theme.colors.primary
-                          : 'transparent',
-                      },
+                      active
+                        ? highContrast
+                          ? { backgroundColor: theme.colors.primary }
+                          : styles.segmentBtnActiveLight
+                        : undefined,
                     ]}
                   >
                     <AppText
-                      variant="label"
-                      bold
-                      color={active ? theme.colors.onPrimary : theme.colors.text}
+                      variant="caption"
+                      weight={active ? '700' : '500'}
+                      color={
+                        active
+                          ? highContrast
+                            ? theme.colors.onPrimary
+                            : theme.colors.primary
+                          : theme.colors.textMuted
+                      }
                     >
                       {label}
                     </AppText>
@@ -153,12 +164,31 @@ export default function SettingsTab(): React.ReactElement {
               })}
             </View>
 
-            <View style={[styles.switchRow, { borderTopColor: theme.colors.border }]}>
+            {/* Khung xem trước trực tiếp cỡ chữ */}
+            <View
+              style={[
+                styles.previewBox,
+                {
+                  backgroundColor: highContrast ? theme.colors.bg : '#F8FAFC',
+                  borderColor: highContrast ? theme.colors.border : '#E2E8F0',
+                },
+              ]}
+            >
+              <AppText variant="caption" weight="600" color={theme.colors.textMuted}>
+                Văn bản mẫu xem trước:
+              </AppText>
+              <AppText variant="body" weight="500" color={theme.colors.text}>
+                Chào bạn, tôi đang dùng ứng dụng giao tiếp hỗ trợ người khiếm thính.
+              </AppText>
+            </View>
+
+            {/* Dòng chế độ tương phản cao */}
+            <View style={[styles.switchRow, { borderTopColor: highContrast ? theme.colors.border : '#F1F5F9' }]}>
               <View style={styles.switchLabelCol}>
-                <AppText variant="body" bold>
+                <AppText variant="subhead" weight="600">
                   {VI_STRINGS.settings.contrastTitle}
                 </AppText>
-                <AppText variant="label" color={theme.colors.textMuted}>
+                <AppText variant="caption" weight="500" color={theme.colors.textMuted}>
                   Nền đen tương phản cao ngoài trời
                 </AppText>
               </View>
@@ -175,7 +205,7 @@ export default function SettingsTab(): React.ReactElement {
 
         {/* Nhóm 2: Giọng nói & Âm thanh */}
         <View style={styles.groupWrapper}>
-          <AppText variant="label" bold color={theme.colors.textMuted} style={styles.groupLabel}>
+          <AppText variant="caption" weight="600" color={theme.colors.textMuted} style={styles.groupLabel}>
             GIỌNG NÓI & ÂM THANH
           </AppText>
 
@@ -183,24 +213,30 @@ export default function SettingsTab(): React.ReactElement {
             style={[
               styles.card,
               {
-                backgroundColor: theme.colors.surface,
-                borderColor: theme.colors.border,
-                borderRadius: 16,
+                backgroundColor: highContrast ? theme.colors.surface : '#FFFFFF',
+                borderColor: highContrast ? theme.colors.border : 'rgba(241, 245, 249, 0.9)',
               },
             ]}
           >
             <View style={styles.sectionHeaderRow}>
-              <Ionicons name="speedometer-outline" size={20} color={theme.colors.primary} />
-              <AppText variant="title" bold>
-                {VI_STRINGS.settings.speechRateTitle}: {speechRate}x
-              </AppText>
+              <View style={[styles.sectionIconBadge, { backgroundColor: highContrast ? theme.colors.bg : '#EFF6FF' }]}>
+                <Ionicons name="speedometer-outline" size={18} color={theme.colors.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <AppText variant="subhead" weight="600">
+                  {VI_STRINGS.settings.speechRateTitle}: {speechRate}x
+                </AppText>
+                <AppText variant="caption" weight="500" color={theme.colors.textMuted}>
+                  Điều chỉnh tốc độ phát âm thanh tiếng Việt
+                </AppText>
+              </View>
             </View>
 
             <View
               style={[
                 styles.segmentedRow,
                 {
-                  backgroundColor: highContrast ? theme.colors.bg : '#E2E8F0',
+                  backgroundColor: highContrast ? theme.colors.bg : '#F1F5F9',
                 },
               ]}
             >
@@ -214,17 +250,23 @@ export default function SettingsTab(): React.ReactElement {
                     onPress={() => setSpeechRate(rate)}
                     style={[
                       styles.segmentBtn,
-                      {
-                        backgroundColor: active
-                          ? theme.colors.primary
-                          : 'transparent',
-                      },
+                      active
+                        ? highContrast
+                          ? { backgroundColor: theme.colors.primary }
+                          : styles.segmentBtnActiveLight
+                        : undefined,
                     ]}
                   >
                     <AppText
-                      variant="label"
-                      bold
-                      color={active ? theme.colors.onPrimary : theme.colors.text}
+                      variant="caption"
+                      weight={active ? '700' : '500'}
+                      color={
+                        active
+                          ? highContrast
+                            ? theme.colors.onPrimary
+                            : theme.colors.primary
+                          : theme.colors.textMuted
+                      }
                     >
                       {rate}x
                     </AppText>
@@ -241,16 +283,18 @@ export default function SettingsTab(): React.ReactElement {
                   rate: speechRate,
                 })
               }
-              style={[
+              style={({ pressed }) => [
                 styles.primaryBtn,
                 {
-                  borderRadius: 14,
-                  backgroundColor: theme.colors.primary,
+                  backgroundColor: highContrast ? theme.colors.bg : '#EFF6FF',
+                  borderWidth: 1,
+                  borderColor: highContrast ? theme.colors.border : '#DBEAFE',
+                  opacity: pressed ? 0.88 : 1,
                 },
               ]}
             >
-              <Ionicons name="volume-high-outline" size={18} color={theme.colors.onPrimary} />
-              <AppText variant="body" bold color={theme.colors.onPrimary}>
+              <Ionicons name="volume-high-outline" size={18} color={theme.colors.primary} />
+              <AppText variant="subhead" weight="600" color={theme.colors.primary}>
                 {VI_STRINGS.settings.testSpeechButton}
               </AppText>
             </Pressable>
@@ -259,7 +303,7 @@ export default function SettingsTab(): React.ReactElement {
 
         {/* Nhóm 3: Thông tin khẩn cấp SOS */}
         <View style={styles.groupWrapper}>
-          <AppText variant="label" bold color={theme.colors.textMuted} style={styles.groupLabel}>
+          <AppText variant="caption" weight="600" color={theme.colors.textMuted} style={styles.groupLabel}>
             THÔNG TIN KHẨN CẤP
           </AppText>
 
@@ -267,18 +311,25 @@ export default function SettingsTab(): React.ReactElement {
             style={[
               styles.card,
               {
-                backgroundColor: theme.colors.surface,
-                borderColor: theme.colors.border,
-                borderRadius: 16,
+                backgroundColor: highContrast ? theme.colors.surface : '#FFFFFF',
+                borderColor: highContrast ? theme.colors.border : 'rgba(241, 245, 249, 0.9)',
               },
             ]}
           >
             <View style={styles.sectionHeaderRow}>
-              <Ionicons name="medkit-outline" size={20} color={theme.colors.danger} />
-              <AppText variant="title" bold>
-                {VI_STRINGS.settings.emergencyTitle}
-              </AppText>
+              <View style={[styles.sectionIconBadge, { backgroundColor: highContrast ? theme.colors.bg : '#FEE2E2' }]}>
+                <Ionicons name="medkit-outline" size={18} color={theme.colors.danger} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <AppText variant="subhead" weight="600">
+                  {VI_STRINGS.settings.emergencyTitle}
+                </AppText>
+                <AppText variant="caption" weight="500" color={theme.colors.textMuted}>
+                  Hiện trên toàn màn hình khi giữ nút SOS đỏ
+                </AppText>
+              </View>
             </View>
+
             <TextInput
               allowFontScaling={false}
               multiline
@@ -291,9 +342,8 @@ export default function SettingsTab(): React.ReactElement {
                 {
                   fontSize: theme.fonts.body,
                   color: theme.colors.text,
-                  backgroundColor: theme.colors.bg,
-                  borderColor: theme.colors.border,
-                  borderRadius: 14,
+                  backgroundColor: highContrast ? theme.colors.bg : '#F8FAFC',
+                  borderColor: highContrast ? theme.colors.border : '#E2E8F0',
                 },
               ]}
             />
@@ -302,7 +352,7 @@ export default function SettingsTab(): React.ReactElement {
 
         {/* Nhóm 4: Kiểm tra hệ thống & Giới thiệu */}
         <View style={styles.groupWrapper}>
-          <AppText variant="label" bold color={theme.colors.textMuted} style={styles.groupLabel}>
+          <AppText variant="caption" weight="600" color={theme.colors.textMuted} style={styles.groupLabel}>
             HỆ THỐNG & GIỚI THIỆU
           </AppText>
 
@@ -310,24 +360,43 @@ export default function SettingsTab(): React.ReactElement {
             style={[
               styles.card,
               {
-                backgroundColor: theme.colors.surface,
-                borderColor: theme.colors.border,
-                borderRadius: 16,
+                backgroundColor: highContrast ? theme.colors.surface : '#FFFFFF',
+                borderColor: highContrast ? theme.colors.border : 'rgba(241, 245, 249, 0.9)',
               },
             ]}
           >
             <View style={styles.sectionHeaderRow}>
-              <Ionicons name="hardware-chip-outline" size={20} color={theme.colors.primary} />
-              <AppText variant="title" bold>
-                {VI_STRINGS.settings.systemCheckTitle}
+              <View style={[styles.sectionIconBadge, { backgroundColor: highContrast ? theme.colors.bg : '#EFF6FF' }]}>
+                <Ionicons name="hardware-chip-outline" size={18} color={theme.colors.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <AppText variant="subhead" weight="600">
+                  {VI_STRINGS.settings.systemCheckTitle}
+                </AppText>
+              </View>
+            </View>
+
+            {/* Trạng thái hệ thống */}
+            <View style={styles.systemStatusPill}>
+              <View
+                style={[
+                  styles.statusDot,
+                  {
+                    backgroundColor:
+                      statusLight === 'ready'
+                        ? '#16A34A'
+                        : statusLight === 'attention'
+                          ? '#EAB308'
+                          : '#DC2626',
+                  },
+                ]}
+              />
+              <AppText variant="caption" weight="600" color={theme.colors.text}>
+                {VI_STRINGS.statusLight[statusLight]} {voiceStatus ? `· ${voiceStatus}` : ''}
               </AppText>
             </View>
 
-            <AppText variant="body" color={theme.colors.textMuted}>
-              {VI_STRINGS.statusLight[statusLight]} {voiceStatus ? `· ${voiceStatus}` : ''}
-            </AppText>
-
-            <AppText variant="label" color={theme.colors.textMuted}>
+            <AppText variant="caption" weight="500" color={theme.colors.textMuted}>
               {VI_STRINGS.settings.oppoBatteryTip}
             </AppText>
 
@@ -335,61 +404,64 @@ export default function SettingsTab(): React.ReactElement {
               accessibilityRole="button"
               accessibilityLabel={VI_STRINGS.settings.systemCheckTitle}
               onPress={runSystemCheck}
-              style={[
+              style={({ pressed }) => [
                 styles.primaryBtn,
                 {
-                  borderRadius: 14,
-                  backgroundColor: theme.colors.bg,
-                  borderWidth: 1,
-                  borderColor: theme.colors.border,
+                  backgroundColor: highContrast ? theme.colors.bg : '#F8FAFC',
+                  borderColor: highContrast ? theme.colors.border : '#E2E8F0',
+                  opacity: pressed ? 0.88 : 1,
                 },
               ]}
             >
               <Ionicons name="refresh-outline" size={18} color={theme.colors.text} />
-              <AppText variant="body" bold>
+              <AppText variant="subhead" weight="600">
                 {VI_STRINGS.settings.systemCheckTitle}
               </AppText>
             </Pressable>
           </View>
 
+          {/* Thẻ miễn trừ trách nhiệm & Onboarding */}
           <View
             style={[
               styles.card,
               {
-                backgroundColor: theme.colors.surface,
-                borderColor: theme.colors.border,
-                borderRadius: 16,
-                marginTop: 10,
+                backgroundColor: highContrast ? theme.colors.surface : '#FFFFFF',
+                borderColor: highContrast ? theme.colors.border : 'rgba(241, 245, 249, 0.9)',
+                marginTop: 4,
               },
             ]}
           >
             <View style={styles.sectionHeaderRow}>
-              <Ionicons name="shield-checkmark-outline" size={20} color={theme.colors.primary} />
-              <AppText variant="title" bold>
+              <View style={[styles.sectionIconBadge, { backgroundColor: highContrast ? theme.colors.bg : '#EFF6FF' }]}>
+                <Ionicons name="shield-checkmark-outline" size={18} color={theme.colors.primary} />
+              </View>
+              <AppText variant="subhead" weight="600">
                 {VI_STRINGS.settings.aboutTitle}
               </AppText>
             </View>
 
-            <AppText variant="body" color={theme.colors.danger} bold>
-              {VI_STRINGS.settings.emergencyDisclaimer}
-            </AppText>
+            <View style={styles.disclaimerBox}>
+              <Ionicons name="warning-outline" size={16} color={theme.colors.danger} />
+              <AppText variant="caption" weight="600" color={theme.colors.danger} style={{ flex: 1 }}>
+                {VI_STRINGS.settings.emergencyDisclaimer}
+              </AppText>
+            </View>
 
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={VI_STRINGS.settings.openOnboardingButton}
               onPress={() => setOnboardingOpen(true)}
-              style={[
+              style={({ pressed }) => [
                 styles.primaryBtn,
                 {
-                  borderRadius: 14,
-                  backgroundColor: theme.colors.bg,
-                  borderWidth: 1,
-                  borderColor: theme.colors.border,
+                  backgroundColor: highContrast ? theme.colors.bg : '#F8FAFC',
+                  borderColor: highContrast ? theme.colors.border : '#E2E8F0',
+                  opacity: pressed ? 0.88 : 1,
                 },
               ]}
             >
               <Ionicons name="repeat-outline" size={18} color={theme.colors.text} />
-              <AppText variant="label" bold>
+              <AppText variant="subhead" weight="600">
                 {VI_STRINGS.settings.openOnboardingButton}
               </AppText>
             </Pressable>
@@ -398,7 +470,7 @@ export default function SettingsTab(): React.ReactElement {
 
         {/* Nhóm 5: Lịch sử giao tiếp */}
         <View style={styles.groupWrapper}>
-          <AppText variant="label" bold color={theme.colors.textMuted} style={styles.groupLabel}>
+          <AppText variant="caption" weight="600" color={theme.colors.textMuted} style={styles.groupLabel}>
             LỊCH SỬ GIAO TIẾP
           </AppText>
 
@@ -406,21 +478,22 @@ export default function SettingsTab(): React.ReactElement {
             style={[
               styles.card,
               {
-                backgroundColor: theme.colors.surface,
-                borderColor: theme.colors.border,
-                borderRadius: 16,
+                backgroundColor: highContrast ? theme.colors.surface : '#FFFFFF',
+                borderColor: highContrast ? theme.colors.border : 'rgba(241, 245, 249, 0.9)',
               },
             ]}
           >
             <View style={styles.sectionHeaderRow}>
-              <Ionicons name="time-outline" size={20} color={theme.colors.primary} />
-              <AppText variant="title" bold>
+              <View style={[styles.sectionIconBadge, { backgroundColor: highContrast ? theme.colors.bg : '#EFF6FF' }]}>
+                <Ionicons name="time-outline" size={18} color={theme.colors.primary} />
+              </View>
+              <AppText variant="subhead" weight="600">
                 {VI_STRINGS.settings.historyTitle}
               </AppText>
             </View>
 
             {history.length === 0 ? (
-              <AppText variant="body" color={theme.colors.textMuted}>
+              <AppText variant="caption" weight="500" color={theme.colors.textMuted}>
                 {VI_STRINGS.settings.historyEmpty}
               </AppText>
             ) : (
@@ -431,7 +504,7 @@ export default function SettingsTab(): React.ReactElement {
                     size={16}
                     color={item.speaker === 'other' ? theme.colors.primary : theme.colors.textMuted}
                   />
-                  <AppText variant="body" style={{ flex: 1 }}>
+                  <AppText variant="caption" weight="500" style={{ flex: 1 }}>
                     {item.text}
                   </AppText>
                 </View>
@@ -443,18 +516,17 @@ export default function SettingsTab(): React.ReactElement {
                 accessibilityRole="button"
                 accessibilityLabel={VI_STRINGS.settings.clearHistoryButton}
                 onPress={clearHistory}
-                style={[
+                style={({ pressed }) => [
                   styles.primaryBtn,
                   {
-                    borderRadius: 14,
-                    backgroundColor: theme.colors.bg,
-                    borderWidth: 1,
-                    borderColor: theme.colors.danger,
+                    backgroundColor: highContrast ? theme.colors.bg : '#FEF2F2',
+                    borderColor: highContrast ? theme.colors.danger : '#FECACA',
+                    opacity: pressed ? 0.88 : 1,
                   },
                 ]}
               >
                 <Ionicons name="trash-outline" size={18} color={theme.colors.danger} />
-                <AppText variant="label" bold color={theme.colors.danger}>
+                <AppText variant="subhead" weight="600" color={theme.colors.danger}>
                   {VI_STRINGS.settings.clearHistoryButton}
                 </AppText>
               </Pressable>
@@ -473,8 +545,13 @@ export default function SettingsTab(): React.ReactElement {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  scrollContent: {
+    padding: 16,
+    gap: 16,
+    paddingBottom: 104, // accommodate Floating Island Dock
+  },
   groupWrapper: {
-    gap: 6,
+    gap: 8,
   },
   groupLabel: {
     paddingHorizontal: 4,
@@ -482,23 +559,31 @@ const styles = StyleSheet.create({
   },
   card: {
     borderWidth: 1,
+    borderRadius: 20,
     padding: 16,
-    gap: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    gap: 14,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.04,
-    shadowRadius: 3,
-    elevation: 1,
+    shadowRadius: 14,
+    elevation: 2,
   },
   sectionHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
+  },
+  sectionIconBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   segmentedRow: {
     flexDirection: 'row',
     padding: 4,
-    borderRadius: 12,
+    borderRadius: 16,
     gap: 4,
   },
   segmentBtn: {
@@ -506,14 +591,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: 12,
+  },
+  segmentBtnActiveLight: {
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  previewBox: {
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: 12,
+    gap: 6,
   },
   switchRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingTop: 12,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopWidth: 1,
   },
   switchLabelCol: {
     flex: 1,
@@ -525,13 +624,35 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     minHeight: 48,
+    borderRadius: 16,
+    borderWidth: 1,
     paddingHorizontal: 16,
   },
   input: {
     borderWidth: 1,
+    borderRadius: 16,
     padding: 14,
-    minHeight: 90,
+    minHeight: 88,
     textAlignVertical: 'top',
+  },
+  systemStatusPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 4,
+  },
+  statusDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  disclaimerBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#FEF2F2',
+    padding: 10,
+    borderRadius: 12,
   },
   historyItemRow: {
     flexDirection: 'row',

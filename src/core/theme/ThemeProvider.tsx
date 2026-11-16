@@ -8,6 +8,7 @@ import {
   LIGHT_COLORS,
   MOTION,
   RADII,
+  SHADOWS,
   SOS_COLORS,
   SPACING,
   getScaledFontSizes,
@@ -23,6 +24,7 @@ export interface AppThemeContextValue {
   fonts: Record<keyof typeof BASE_FONT_SIZES, number>;
   spacing: typeof SPACING;
   radii: typeof RADII;
+  shadows: typeof SHADOWS;
   dimensions: typeof DIMENSIONS;
   motion: typeof MOTION;
   reduceMotion: boolean;
@@ -69,6 +71,7 @@ export function ThemeProvider({
       fonts: getScaledFontSizes(fontLevel),
       spacing: SPACING,
       radii: RADII,
+      shadows: SHADOWS,
       dimensions: DIMENSIONS,
       motion: MOTION,
       reduceMotion,
@@ -90,6 +93,7 @@ export function useAppTheme(): AppThemeContextValue {
       fonts: getScaledFontSizes('small'),
       spacing: SPACING,
       radii: RADII,
+      shadows: SHADOWS,
       dimensions: DIMENSIONS,
       motion: MOTION,
       reduceMotion: false,
@@ -102,16 +106,20 @@ export interface AppTextProps extends TextProps {
   variant?: keyof typeof BASE_FONT_SIZES;
   color?: string;
   bold?: boolean;
+  weight?: '400' | '500' | '600' | '700';
 }
 
 export function AppText({
   variant = 'body',
   color,
-  bold = false,
+  bold,
+  weight,
   style,
   ...rest
 }: AppTextProps): React.ReactElement {
   const theme = useAppTheme();
+  const resolvedWeight = weight ? weight : bold ? '700' : '400';
+
   return (
     <Text
       allowFontScaling={false}
@@ -119,7 +127,7 @@ export function AppText({
         {
           fontSize: theme.fonts[variant],
           color: color ?? theme.colors.text,
-          fontWeight: bold ? '700' : '400',
+          fontWeight: resolvedWeight,
         },
         style,
       ]}
@@ -127,4 +135,3 @@ export function AppText({
     />
   );
 }
-

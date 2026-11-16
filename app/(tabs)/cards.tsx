@@ -20,7 +20,7 @@ import type { CardFilterScope } from '../../src/features/cards/cardStore.ts';
 
 export default function CardsTab(): React.ReactElement {
   const theme = useAppTheme();
-  const highContrast = useSystemStore((s) => s.highContrast);
+  const highContrast = theme.isHighContrast;
   const speechRate = useSystemStore((s) => s.speechRate);
 
   const revision = useCardsStore((s) => s.revision);
@@ -87,21 +87,21 @@ export default function CardsTab(): React.ReactElement {
   };
 
   return (
-    <SafeAreaView edges={['top']} style={[styles.root, { backgroundColor: theme.colors.bg }]}>
+    <SafeAreaView edges={['top']} style={[styles.root, { backgroundColor: highContrast ? theme.colors.bg : '#F8FAFC' }]}>
       <TopBar title={VI_STRINGS.tabs.cards} />
 
-      <View style={[styles.body, { padding: theme.spacing.md, gap: theme.spacing.sm }]}>
-        {/* Thanh tìm kiếm phong cách modern */}
+      <View style={styles.body}>
+        {/* Thanh tìm kiếm phong cách Soft-UI */}
         <View
           style={[
             styles.searchBar,
             {
-              backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.border,
+              backgroundColor: highContrast ? theme.colors.surface : '#FFFFFF',
+              borderColor: highContrast ? theme.colors.border : 'rgba(226, 232, 240, 0.8)',
             },
           ]}
         >
-          <Ionicons name="search-outline" size={20} color={theme.colors.textMuted} />
+          <Ionicons name="search-outline" size={18} color={theme.colors.textMuted} />
           <TextInput
             allowFontScaling={false}
             value={query}
@@ -111,84 +111,101 @@ export default function CardsTab(): React.ReactElement {
             style={[
               styles.searchInput,
               {
-                fontSize: theme.fonts.body,
+                fontSize: 14,
                 color: theme.colors.text,
               },
             ]}
           />
           {query.length > 0 ? (
             <Pressable onPress={() => setQuery('')}>
-              <Ionicons name="close-circle" size={18} color={theme.colors.textMuted} />
+              <Ionicons name="close-circle" size={16} color={theme.colors.textMuted} />
             </Pressable>
           ) : null}
         </View>
 
-        {/* Hàng bộ lọc danh mục */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.filterScroll}
-          contentContainerStyle={{ gap: 8, alignItems: 'center' }}
-        >
-          {(['all', 'mine'] as const).map((s) => {
-            const active = scope === s && !selectedTopic;
-            const label =
-              s === 'all' ? VI_STRINGS.cards.allFilter : VI_STRINGS.cards.mineFilter;
-            return (
-              <Pressable
-                key={s}
-                accessibilityRole="button"
-                accessibilityLabel={label}
-                onPress={() => {
-                  setScope(s);
-                  setSelectedTopic(undefined);
-                }}
-                style={[
-                  styles.filterChip,
-                  {
-                    backgroundColor: active ? theme.colors.primary : theme.colors.surface,
-                    borderColor: active ? theme.colors.primary : theme.colors.border,
-                  },
-                ]}
-              >
-                <AppText
-                  variant="label"
-                  bold
-                  color={active ? theme.colors.onPrimary : theme.colors.text}
+        {/* Hàng bộ lọc danh mục capsule */}
+        <View style={styles.filterWrapper}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterScroll}
+          >
+            {(['all', 'mine'] as const).map((s) => {
+              const active = scope === s && !selectedTopic;
+              const label =
+                s === 'all' ? VI_STRINGS.cards.allFilter : VI_STRINGS.cards.mineFilter;
+              return (
+                <Pressable
+                  key={s}
+                  accessibilityRole="button"
+                  accessibilityLabel={label}
+                  onPress={() => {
+                    setScope(s);
+                    setSelectedTopic(undefined);
+                  }}
+                  style={[
+                    styles.filterPill,
+                    {
+                      backgroundColor: active
+                        ? theme.colors.primary
+                        : highContrast
+                          ? theme.colors.surface
+                          : '#FFFFFF',
+                      borderColor: active
+                        ? theme.colors.primary
+                        : highContrast
+                          ? theme.colors.border
+                          : 'rgba(226, 232, 240, 0.8)',
+                    },
+                  ]}
                 >
-                  {label}
-                </AppText>
-              </Pressable>
-            );
-          })}
+                  <AppText
+                    variant="caption"
+                    weight="600"
+                    color={active ? theme.colors.onPrimary : theme.colors.text}
+                  >
+                    {label}
+                  </AppText>
+                </Pressable>
+              );
+            })}
 
-          {VI_STRINGS.cards.topics.map((topic) => {
-            const active = selectedTopic === topic;
-            return (
-              <Pressable
-                key={topic}
-                accessibilityRole="button"
-                accessibilityLabel={topic}
-                onPress={() => setSelectedTopic(active ? undefined : topic)}
-                style={[
-                  styles.filterChip,
-                  {
-                    backgroundColor: active ? theme.colors.primary : theme.colors.surface,
-                    borderColor: active ? theme.colors.primary : theme.colors.border,
-                  },
-                ]}
-              >
-                <AppText
-                  variant="label"
-                  bold
-                  color={active ? theme.colors.onPrimary : theme.colors.text}
+            {VI_STRINGS.cards.topics.map((topic) => {
+              const active = selectedTopic === topic;
+              return (
+                <Pressable
+                  key={topic}
+                  accessibilityRole="button"
+                  accessibilityLabel={topic}
+                  onPress={() => setSelectedTopic(active ? undefined : topic)}
+                  style={[
+                    styles.filterPill,
+                    {
+                      backgroundColor: active
+                        ? theme.colors.primary
+                        : highContrast
+                          ? theme.colors.surface
+                          : '#FFFFFF',
+                      borderColor: active
+                        ? theme.colors.primary
+                        : highContrast
+                          ? theme.colors.border
+                          : 'rgba(226, 232, 240, 0.8)',
+                    },
+                  ]}
                 >
-                  {topic}
-                </AppText>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
+                  <AppText
+                    variant="caption"
+                    weight="600"
+                    color={active ? theme.colors.onPrimary : theme.colors.text}
+                  >
+                    {topic}
+                  </AppText>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </View>
 
         {lastError ? (
           <Pressable
@@ -197,8 +214,8 @@ export default function CardsTab(): React.ReactElement {
             onPress={clearError}
             style={styles.errorBanner}
           >
-            <Ionicons name="alert-circle-outline" size={18} color={theme.colors.danger} />
-            <AppText variant="label" bold color={theme.colors.danger}>
+            <Ionicons name="alert-circle-outline" size={16} color={theme.colors.danger} />
+            <AppText variant="caption" weight="600" color={theme.colors.danger}>
               {lastError}
             </AppText>
           </Pressable>
@@ -214,12 +231,11 @@ export default function CardsTab(): React.ReactElement {
               styles.undoBar,
               {
                 backgroundColor: theme.colors.primary,
-                borderRadius: 14,
               },
             ]}
           >
-            <Ionicons name="arrow-undo-outline" size={20} color={theme.colors.onPrimary} />
-            <AppText variant="body" bold color={theme.colors.onPrimary}>
+            <Ionicons name="arrow-undo-outline" size={18} color={theme.colors.onPrimary} />
+            <AppText variant="subhead" weight="600" color={theme.colors.onPrimary}>
               {VI_STRINGS.cards.deletedUndo}
             </AppText>
           </Pressable>
@@ -234,31 +250,32 @@ export default function CardsTab(): React.ReactElement {
             styles.createBtn,
             {
               backgroundColor: theme.colors.primary,
-              borderRadius: 16,
-              opacity: pressed ? 0.85 : 1,
+              opacity: pressed ? 0.9 : 1,
             },
           ]}
         >
-          <Ionicons name="add-circle-outline" size={22} color={theme.colors.onPrimary} />
-          <AppText variant="body" bold color={theme.colors.onPrimary}>
+          <Ionicons name="add" size={20} color={theme.colors.onPrimary} />
+          <AppText variant="subhead" weight="600" color={theme.colors.onPrimary}>
             {VI_STRINGS.cards.createButton}
           </AppText>
         </Pressable>
 
-        {/* Danh sách thẻ giao tiếp dạng Cards */}
+        {/* Danh sách thẻ giao tiếp Soft Card Tiles */}
         <FlatList
           data={visibleCards}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Ionicons name="albums-outline" size={40} color={theme.colors.textMuted} />
-              <AppText variant="body" color={theme.colors.textMuted}>
+              <View style={styles.emptyIconCircle}>
+                <Ionicons name="albums-outline" size={32} color={theme.colors.textMuted} />
+              </View>
+              <AppText variant="caption" weight="500" color={theme.colors.textMuted}>
                 {VI_STRINGS.cards.emptyState}
               </AppText>
             </View>
           }
-          contentContainerStyle={{ gap: 10, paddingBottom: 24 }}
+          contentContainerStyle={styles.listContent}
           renderItem={({ item }) => {
             const topicColors = getTopicColor(item.topic);
             return (
@@ -269,10 +286,13 @@ export default function CardsTab(): React.ReactElement {
                 style={({ pressed }) => [
                   styles.cardTile,
                   {
-                    backgroundColor: theme.colors.surface,
-                    borderColor: item.pinned ? theme.colors.primary : theme.colors.border,
-                    borderRadius: 16,
-                    opacity: pressed ? 0.9 : 1,
+                    backgroundColor: highContrast ? theme.colors.surface : '#FFFFFF',
+                    borderColor: item.pinned
+                      ? theme.colors.primary
+                      : highContrast
+                        ? theme.colors.border
+                        : 'rgba(226, 232, 240, 0.7)',
+                    opacity: pressed ? 0.92 : 1,
                   },
                 ]}
               >
@@ -287,13 +307,13 @@ export default function CardsTab(): React.ReactElement {
                           },
                         ]}
                       >
-                        <AppText variant="label" bold color={topicColors.text}>
+                        <AppText variant="caption" weight="600" color={topicColors.text}>
                           {item.topic}
                         </AppText>
                       </View>
                     ) : null}
                     {item.isDefault ? (
-                      <AppText variant="label" color={theme.colors.textMuted}>
+                      <AppText variant="caption" color={theme.colors.textMuted}>
                         · {VI_STRINGS.cards.defaultTag}
                       </AppText>
                     ) : null}
@@ -306,19 +326,19 @@ export default function CardsTab(): React.ReactElement {
                     ]}
                   >
                     <Ionicons
-                      name="volume-medium-outline"
-                      size={20}
+                      name="volume-medium"
+                      size={16}
                       color={theme.colors.primary}
                     />
                   </View>
                 </View>
 
-                <AppText variant="title" bold style={styles.cardContentText}>
+                <AppText variant="subhead" weight="600" style={styles.cardContentText}>
                   {item.content}
                 </AppText>
 
                 {!item.isDefault ? (
-                  <View style={[styles.cardActionsRow, { borderTopColor: theme.colors.border }]}>
+                  <View style={[styles.cardActionsRow, { borderTopColor: highContrast ? theme.colors.border : '#F1F5F9' }]}>
                     <Pressable
                       accessibilityRole="button"
                       accessibilityLabel={
@@ -328,24 +348,26 @@ export default function CardsTab(): React.ReactElement {
                       style={[
                         styles.actionPill,
                         {
-                          borderColor: item.pinned ? theme.colors.primary : theme.colors.border,
+                          borderColor: item.pinned ? theme.colors.primary : 'transparent',
                           backgroundColor: item.pinned
                             ? highContrast
                               ? theme.colors.surface
                               : '#EEF2FF'
-                            : theme.colors.bg,
+                            : highContrast
+                              ? theme.colors.surface
+                              : '#F8FAFC',
                         },
                       ]}
                     >
                       <Ionicons
                         name={item.pinned ? 'bookmark' : 'bookmark-outline'}
-                        size={15}
-                        color={item.pinned ? theme.colors.primary : theme.colors.text}
+                        size={13}
+                        color={item.pinned ? theme.colors.primary : theme.colors.textMuted}
                       />
                       <AppText
-                        variant="label"
-                        bold
-                        color={item.pinned ? theme.colors.primary : theme.colors.text}
+                        variant="caption"
+                        weight="600"
+                        color={item.pinned ? theme.colors.primary : theme.colors.textMuted}
                       >
                         {item.pinned ? VI_STRINGS.cards.unpinButton : VI_STRINGS.cards.pinButton}
                       </AppText>
@@ -357,11 +379,14 @@ export default function CardsTab(): React.ReactElement {
                       onPress={() => openEdit(item.id, item.content, item.topic)}
                       style={[
                         styles.actionPill,
-                        { borderColor: theme.colors.border, backgroundColor: theme.colors.bg },
+                        {
+                          backgroundColor: highContrast ? theme.colors.surface : '#F8FAFC',
+                          borderColor: 'transparent',
+                        },
                       ]}
                     >
-                      <Ionicons name="create-outline" size={15} color={theme.colors.text} />
-                      <AppText variant="label" bold>
+                      <Ionicons name="create-outline" size={13} color={theme.colors.textMuted} />
+                      <AppText variant="caption" weight="600" color={theme.colors.textMuted}>
                         {VI_STRINGS.cards.editButton}
                       </AppText>
                     </Pressable>
@@ -372,11 +397,14 @@ export default function CardsTab(): React.ReactElement {
                       onPress={() => deleteCard(item.id)}
                       style={[
                         styles.actionPill,
-                        { borderColor: theme.colors.danger, backgroundColor: theme.colors.bg },
+                        {
+                          backgroundColor: highContrast ? theme.colors.surface : '#F8FAFC',
+                          borderColor: 'transparent',
+                        },
                       ]}
                     >
-                      <Ionicons name="trash-outline" size={15} color={theme.colors.danger} />
-                      <AppText variant="label" bold color={theme.colors.danger}>
+                      <Ionicons name="trash-outline" size={13} color={theme.colors.danger} />
+                      <AppText variant="caption" weight="600" color={theme.colors.danger}>
                         {VI_STRINGS.cards.deleteButton}
                       </AppText>
                     </Pressable>
@@ -401,15 +429,15 @@ export default function CardsTab(): React.ReactElement {
               styles.sheet,
               {
                 backgroundColor: theme.colors.bg,
-                borderTopLeftRadius: 24,
-                borderTopRightRadius: 24,
+                borderTopLeftRadius: 28,
+                borderTopRightRadius: 28,
                 padding: theme.spacing.lg,
                 gap: 12,
               },
             ]}
           >
             <View style={styles.sheetHandleBar} />
-            <AppText variant="title" bold>
+            <AppText variant="title" weight="700">
               {editingId ? VI_STRINGS.cards.editButton : VI_STRINGS.cards.createButton}
             </AppText>
 
@@ -428,12 +456,12 @@ export default function CardsTab(): React.ReactElement {
                   color: theme.colors.text,
                   backgroundColor: theme.colors.surface,
                   borderColor: theme.colors.border,
-                  borderRadius: 14,
+                  borderRadius: 16,
                 },
               ]}
             />
 
-            <AppText variant="label" bold color={theme.colors.textMuted}>
+            <AppText variant="caption" weight="600" color={theme.colors.textMuted}>
               {VI_STRINGS.cards.topicLabel}
             </AppText>
 
@@ -447,7 +475,7 @@ export default function CardsTab(): React.ReactElement {
                     accessibilityLabel={topic}
                     onPress={() => setDraftTopic(topic)}
                     style={[
-                      styles.filterChip,
+                      styles.filterPill,
                       {
                         backgroundColor: active ? theme.colors.primary : theme.colors.surface,
                         borderColor: active ? theme.colors.primary : theme.colors.border,
@@ -455,8 +483,8 @@ export default function CardsTab(): React.ReactElement {
                     ]}
                   >
                     <AppText
-                      variant="label"
-                      bold
+                      variant="caption"
+                      weight="600"
                       color={active ? theme.colors.onPrimary : theme.colors.text}
                     >
                       {topic}
@@ -474,13 +502,13 @@ export default function CardsTab(): React.ReactElement {
                 styles.previewBtn,
                 {
                   borderColor: theme.colors.border,
-                  borderRadius: 14,
+                  borderRadius: 16,
                   backgroundColor: theme.colors.surface,
                 },
               ]}
             >
-              <Ionicons name="volume-high-outline" size={18} color={theme.colors.primary} />
-              <AppText variant="body" bold color={theme.colors.primary}>
+              <Ionicons name="volume-high" size={18} color={theme.colors.primary} />
+              <AppText variant="subhead" weight="600" color={theme.colors.primary}>
                 {VI_STRINGS.cards.previewSpeak}
               </AppText>
             </Pressable>
@@ -499,7 +527,7 @@ export default function CardsTab(): React.ReactElement {
                   },
                 ]}
               >
-                <AppText variant="body" bold>
+                <AppText variant="body" weight="600">
                   {VI_STRINGS.communicate.closeButton}
                 </AppText>
               </Pressable>
@@ -515,7 +543,7 @@ export default function CardsTab(): React.ReactElement {
                   },
                 ]}
               >
-                <AppText variant="body" bold color={theme.colors.onPrimary}>
+                <AppText variant="body" weight="600" color={theme.colors.onPrimary}>
                   {VI_STRINGS.cards.saveButton}
                 </AppText>
               </Pressable>
@@ -529,27 +557,41 @@ export default function CardsTab(): React.ReactElement {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  body: { flex: 1 },
+  body: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    gap: 10,
+  },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
     borderWidth: 1,
-    borderRadius: 16,
+    borderRadius: 18,
     paddingHorizontal: 14,
-    minHeight: 48,
+    height: 44,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
   },
   searchInput: {
     flex: 1,
-    paddingVertical: 10,
+    paddingVertical: 8,
+  },
+  filterWrapper: {
+    marginVertical: 2,
   },
   filterScroll: {
-    maxHeight: 44,
+    gap: 8,
+    alignItems: 'center',
   },
-  filterChip: {
+  filterPill: {
     paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingVertical: 7,
+    borderRadius: 999,
     borderWidth: 1,
   },
   errorBanner: {
@@ -563,40 +605,55 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    minHeight: 48,
+    height: 44,
+    borderRadius: 14,
     paddingHorizontal: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowColor: '#1D4ED8',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 4,
   },
   createBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    minHeight: 52,
+    height: 48,
+    borderRadius: 18,
     shadowColor: '#1D4ED8',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  listContent: {
+    gap: 10,
+    paddingBottom: 96,
   },
   emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 40,
-    gap: 10,
+    gap: 8,
+  },
+  emptyIconCircle: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: '#EFF6FF',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   cardTile: {
     borderWidth: 1,
+    borderRadius: 20,
     padding: 16,
     gap: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 12,
     elevation: 2,
   },
   cardHeaderRow: {
@@ -612,48 +669,49 @@ const styles = StyleSheet.create({
   topicBadge: {
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 6,
+    borderRadius: 8,
   },
   speakIconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
   cardContentText: {
-    lineHeight: 28,
+    lineHeight: 24,
+    letterSpacing: -0.2,
   },
   cardActionsRow: {
     flexDirection: 'row',
     gap: 8,
     paddingTop: 10,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopWidth: 1,
   },
   actionPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
     paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 20,
+    paddingVertical: 5,
+    borderRadius: 999,
     borderWidth: 1,
   },
   sheetBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
     justifyContent: 'flex-end',
   },
   sheet: {
     minHeight: 380,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 10,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 20,
+    elevation: 12,
   },
   sheetHandleBar: {
-    width: 40,
+    width: 36,
     height: 4,
     borderRadius: 2,
     backgroundColor: '#CBD5E1',
@@ -676,14 +734,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    minHeight: 48,
+    height: 46,
     borderWidth: 1,
   },
   sheetActionBtn: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 48,
-    borderRadius: 14,
+    height: 48,
+    borderRadius: 16,
   },
 });

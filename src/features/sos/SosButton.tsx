@@ -39,19 +39,15 @@ export function SosButton(): React.ReactElement {
         testID="sos-button"
         onPressIn={() => pressIn(Date.now())}
         onPressOut={() => pressOut()}
-        style={[
+        style={({ pressed }) => [
           styles.button,
           {
-            width: 52,
-            height: 52,
-            borderRadius: 26,
             backgroundColor: theme.sosColors.bg,
-            borderWidth: 2,
-            borderColor: '#FFFFFF',
+            transform: [{ scale: pressed ? 0.95 : 1 }],
           },
         ]}
       >
-        <AppText variant="label" bold color={theme.sosColors.text}>
+        <AppText variant="caption" weight="700" color={theme.sosColors.text}>
           {state === 'arming' ? `${pct}%` : VI_STRINGS.sos.buttonLabel}
         </AppText>
       </Pressable>
@@ -63,14 +59,19 @@ const styles = StyleSheet.create({
   wrapper: {
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#B91C1C',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.35,
-    shadowRadius: 5,
+    shadowColor: '#DC2626',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
     elevation: 4,
   },
   button: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
   },
 });

@@ -18,26 +18,34 @@ export function TopBar({ title }: TopBarProps): React.ReactElement {
 
   const dotColor =
     statusLight === 'ready'
-      ? theme.colors.success
+      ? '#10B981'
       : statusLight === 'attention'
-        ? theme.colors.warning
-        : theme.colors.danger;
+        ? '#F59E0B'
+        : '#EF4444';
 
   const statusBg = highContrast
     ? theme.colors.surface
     : statusLight === 'ready'
-      ? '#DCFCE7'
+      ? '#ECFDF5'
       : statusLight === 'attention'
-        ? '#FEF3C7'
-        : '#FEE2E2';
+        ? '#FFFBEB'
+        : '#FEF2F2';
 
   const statusBorder = highContrast
     ? theme.colors.border
     : statusLight === 'ready'
-      ? '#86EFAC'
+      ? '#A7F3D0'
       : statusLight === 'attention'
         ? '#FDE68A'
-        : '#FCA5A5';
+        : '#FECACA';
+
+  const statusTextColor = highContrast
+    ? theme.colors.text
+    : statusLight === 'ready'
+      ? '#065F46'
+      : statusLight === 'attention'
+        ? '#92400E'
+        : '#991B1B';
 
   const statusText = VI_STRINGS.statusLight[statusLight];
 
@@ -46,9 +54,7 @@ export function TopBar({ title }: TopBarProps): React.ReactElement {
       style={[
         styles.container,
         {
-          backgroundColor: theme.colors.surface,
-          borderBottomWidth: StyleSheet.hairlineWidth,
-          borderBottomColor: theme.colors.border,
+          backgroundColor: theme.colors.bg,
         },
       ]}
     >
@@ -56,8 +62,9 @@ export function TopBar({ title }: TopBarProps): React.ReactElement {
         style={[
           styles.row,
           {
-            minHeight: theme.dimensions.topBarHeight,
-            paddingHorizontal: theme.spacing.md,
+            minHeight: 52,
+            paddingHorizontal: 16,
+            paddingVertical: 4,
           },
         ]}
       >
@@ -76,23 +83,28 @@ export function TopBar({ title }: TopBarProps): React.ReactElement {
             style={[
               styles.dot,
               {
-                width: 10,
-                height: 10,
-                borderRadius: 5,
+                width: 8,
+                height: 8,
+                borderRadius: 4,
                 backgroundColor: dotColor,
               },
             ]}
           />
           <AppText
-            variant="label"
-            bold
-            color={highContrast ? theme.colors.text : theme.colors.textMuted}
+            variant="caption"
+            weight="600"
+            color={statusTextColor}
           >
             {statusText}
           </AppText>
         </View>
 
-        <AppText variant="title" bold numberOfLines={1} style={styles.title}>
+        <AppText
+          variant="title"
+          weight="700"
+          numberOfLines={1}
+          style={styles.title}
+        >
           {title}
         </AppText>
 
@@ -100,8 +112,8 @@ export function TopBar({ title }: TopBarProps): React.ReactElement {
       </View>
 
       {sosHint ? (
-        <View style={{ paddingHorizontal: theme.spacing.md, paddingBottom: theme.spacing.xs }}>
-          <AppText variant="label" bold color={theme.colors.warning}>
+        <View style={styles.hintContainer}>
+          <AppText variant="caption" weight="600" color={theme.colors.warning}>
             {sosHint}
           </AppText>
         </View>
@@ -112,17 +124,13 @@ export function TopBar({ title }: TopBarProps): React.ReactElement {
 
 const styles = StyleSheet.create({
   container: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 3,
-    elevation: 2,
+    paddingBottom: 2,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 12,
+    gap: 10,
   },
   statusBadge: {
     flexDirection: 'row',
@@ -137,6 +145,11 @@ const styles = StyleSheet.create({
   title: {
     flex: 1,
     textAlign: 'center',
-    letterSpacing: -0.2,
+    letterSpacing: -0.3,
+  },
+  hintContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 6,
+    alignItems: 'center',
   },
 });

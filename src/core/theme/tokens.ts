@@ -14,10 +14,10 @@ export interface ThemePalette {
 
 export const LIGHT_COLORS: ThemePalette = {
   bg: '#FFFFFF',
-  surface: '#F3F4F6',
-  border: '#D1D5DB',
-  text: '#111827',
-  textMuted: '#374151',
+  surface: '#F8FAFC',
+  border: '#E2E8F0',
+  text: '#0F172A',
+  textMuted: '#475569',
   primary: '#1D4ED8',
   onPrimary: '#FFFFFF',
   success: '#166534',
@@ -48,11 +48,13 @@ export const SOS_COLORS = {
 } as const;
 
 export const BASE_FONT_SIZES = {
+  caption: 12,
   label: 14,
+  subhead: 15,
   body: 16,
-  title: 22,
-  display: 28,
-  conversation: 28,
+  title: 20,
+  display: 26,
+  conversation: 24,
 } as const;
 
 export type FontScaleLevel = 'small' | 'medium' | 'large' | 'max';
@@ -73,7 +75,9 @@ export function resolveDefaultFontScaleLevel(systemFontScale: number): FontScale
 export function getScaledFontSizes(level: FontScaleLevel): Record<keyof typeof BASE_FONT_SIZES, number> {
   const m = FONT_SCALE_MULTIPLIERS[level];
   return {
+    caption: Math.round(BASE_FONT_SIZES.caption * m),
     label: Math.round(BASE_FONT_SIZES.label * m),
+    subhead: Math.round(BASE_FONT_SIZES.subhead * m),
     body: Math.round(BASE_FONT_SIZES.body * m),
     title: Math.round(BASE_FONT_SIZES.title * m),
     display: Math.round(BASE_FONT_SIZES.display * m),
@@ -91,10 +95,35 @@ export const SPACING = {
 } as const;
 
 export const RADII = {
-  card: 12,
-  button: 20,
-  sheet: 20,
+  card: 20,
+  subCard: 14,
+  button: 16,
+  sheet: 24,
   chip: 999,
+} as const;
+
+export const SHADOWS = {
+  soft: {
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 2,
+  },
+  card: {
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+    elevation: 3,
+  },
+  float: {
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 8,
+  },
 } as const;
 
 export const DIMENSIONS = {
@@ -165,4 +194,3 @@ export function validateThemeContrast(
   }
   return failures;
 }
-
