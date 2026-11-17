@@ -213,10 +213,10 @@ export default function DictionaryTab(): React.ReactElement {
           data={filtered}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
-          initialNumToRender={8}
-          maxToRenderPerBatch={8}
-          windowSize={5}
-          removeClippedSubviews={true}
+          initialNumToRender={10}
+          maxToRenderPerBatch={10}
+          windowSize={7}
+          removeClippedSubviews={false}
           contentContainerStyle={styles.listContent}
           renderItem={renderWordItem}
         />

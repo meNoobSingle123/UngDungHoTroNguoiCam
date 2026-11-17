@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Easing, StyleSheet, View } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { VI_STRINGS } from '../../src/core/i18n/vi.ts';
@@ -41,8 +41,30 @@ export default function TabsLayout(): React.ReactElement {
     <Tabs
       screenOptions={{
         headerShown: false,
-        lazy: false,
-        animation: 'none',
+        animation: 'shift',
+        sceneStyleInterpolator: ({ current }) => ({
+          sceneStyle: {
+            opacity: current.progress.interpolate({
+              inputRange: [-1, -0.6, 0, 0.6, 1],
+              outputRange: [0, 0.9, 1, 0.9, 0],
+            }),
+            transform: [
+              {
+                translateX: current.progress.interpolate({
+                  inputRange: [-1, 0, 1],
+                  outputRange: [-120, 0, 120],
+                }),
+              },
+            ],
+          },
+        }),
+        transitionSpec: {
+          animation: 'timing',
+          config: {
+            duration: 180,
+            easing: Easing.out(Easing.cubic),
+          },
+        },
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.textMuted,
         tabBarStyle: [
