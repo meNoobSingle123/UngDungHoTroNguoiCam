@@ -1,9 +1,11 @@
 import React from 'react';
-import { Easing, StyleSheet, View } from 'react-native';
+import { Dimensions, Easing, StyleSheet, View } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { VI_STRINGS } from '../../src/core/i18n/vi.ts';
 import { useAppTheme } from '../../src/core/theme/ThemeProvider.tsx';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -42,17 +44,16 @@ export default function TabsLayout(): React.ReactElement {
       screenOptions={{
         headerShown: false,
         animation: 'shift',
+        sceneStyle: {
+          backgroundColor: highContrast ? theme.colors.bg : '#F8FAFC',
+        },
         sceneStyleInterpolator: ({ current }) => ({
           sceneStyle: {
-            opacity: current.progress.interpolate({
-              inputRange: [-1, -0.6, 0, 0.6, 1],
-              outputRange: [0, 0.9, 1, 0.9, 0],
-            }),
             transform: [
               {
                 translateX: current.progress.interpolate({
                   inputRange: [-1, 0, 1],
-                  outputRange: [-120, 0, 120],
+                  outputRange: [-SCREEN_WIDTH, 0, SCREEN_WIDTH],
                 }),
               },
             ],
@@ -61,7 +62,7 @@ export default function TabsLayout(): React.ReactElement {
         transitionSpec: {
           animation: 'timing',
           config: {
-            duration: 180,
+            duration: 200,
             easing: Easing.out(Easing.cubic),
           },
         },
