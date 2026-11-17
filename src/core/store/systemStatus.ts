@@ -13,6 +13,13 @@ export type PermissionCheckState =
   | 'denied'
   | 'never_ask_again';
 
+export interface UserAccountInfo {
+  isLoggedIn: boolean;
+  email?: string;
+  displayName?: string;
+  syncStatus: 'offline' | 'synced' | 'pending';
+}
+
 export interface ConversationEntry {
   id: string;
   speaker: 'me' | 'other';
@@ -27,6 +34,7 @@ export interface PersistedSettingsSnapshot {
   voiceGender?: VoiceGender;
   emergencyInfo?: string;
   onboardingStatus?: OnboardingStatus;
+  userAccount?: UserAccountInfo;
 }
 
 type SettingsPersistListener = (settings: Required<PersistedSettingsSnapshot>) => void;
@@ -46,6 +54,7 @@ function notifyPersist(state: SystemStoreState): void {
     voiceGender: state.voiceGender,
     emergencyInfo: state.emergencyInfo,
     onboardingStatus: state.onboardingStatus,
+    userAccount: state.userAccount,
   });
 }
 
@@ -61,6 +70,7 @@ export interface SystemStoreState {
   emergencyInfo: string;
   onboardingStatus: OnboardingStatus;
   permissionState: PermissionCheckState;
+  userAccount: UserAccountInfo;
   history: ConversationEntry[];
 
   setStatusLight: (level: SystemStatusLevel, detail?: string | null) => void;
@@ -74,6 +84,8 @@ export interface SystemStoreState {
   setEmergencyInfo: (text: string) => void;
   setOnboardingStatus: (status: OnboardingStatus) => void;
   setPermissionState: (state: PermissionCheckState) => void;
+  loginUser: (email: string) => void;
+  logoutUser: () => void;
   applyPersistedSettings: (snapshot: PersistedSettingsSnapshot) => void;
   addHistoryEntry: (speaker: 'me' | 'other', text: string, tMs?: number) => void;
   clearHistory: () => void;
@@ -91,6 +103,10 @@ export const useSystemStore = create<SystemStoreState>((set, get) => ({
   emergencyInfo: '',
   onboardingStatus: 'pending',
   permissionState: 'unknown',
+  userAccount: {
+    isLoggedIn: false,
+    syncStatus: 'offline',
+  },
   history: [],
 
   setStatusLight: (statusLight, statusDetail = null) =>
@@ -129,6 +145,27 @@ export const useSystemStore = create<SystemStoreState>((set, get) => ({
     notifyPersist(get());
   },
   setPermissionState: (permissionState) => set({ permissionState }),
+  loginUser: (email: string) => {
+    const cleanEmail = email.trim() || 'nguoidung@nguoicam.vn';
+    set({
+      userAccount: {
+        isLoggedIn: true,
+        email: cleanEmail,
+        displayName: cleanEmail.split('@')[0],
+        syncStatus: 'synced',
+      },
+    });
+    notifyPersist(get());
+  },
+  logoutUser: () => {
+    set({
+      userAccount: {
+        isLoggedIn: false,
+        syncStatus: 'offline',
+      },
+    });
+    notifyPersist(get());
+  },
   applyPersistedSettings: (snapshot) =>
     set((s) => ({
       fontLevel: snapshot.fontLevel ?? s.fontLevel,
@@ -137,6 +174,7 @@ export const useSystemStore = create<SystemStoreState>((set, get) => ({
       voiceGender: snapshot.voiceGender ?? s.voiceGender,
       emergencyInfo: snapshot.emergencyInfo ?? s.emergencyInfo,
       onboardingStatus: snapshot.onboardingStatus ?? s.onboardingStatus,
+      userAccount: snapshot.userAccount ?? s.userAccount,
     })),
   addHistoryEntry: (speaker, text, tMs = Date.now()) =>
     set((s) => ({

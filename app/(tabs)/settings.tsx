@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -31,6 +32,7 @@ export default function SettingsTab(): React.ReactElement {
   const statusLight = useSystemStore((s) => s.statusLight);
   const onboardingStatus = useSystemStore((s) => s.onboardingStatus);
   const history = useSystemStore((s) => s.history);
+  const userAccount = useSystemStore((s) => s.userAccount);
 
   const setFontLevel = useSystemStore((s) => s.setFontLevel);
   const setHighContrast = useSystemStore((s) => s.setHighContrast);
@@ -39,9 +41,15 @@ export default function SettingsTab(): React.ReactElement {
   const setEmergencyInfo = useSystemStore((s) => s.setEmergencyInfo);
   const setStatusLight = useSystemStore((s) => s.setStatusLight);
   const clearHistory = useSystemStore((s) => s.clearHistory);
+  const loginUser = useSystemStore((s) => s.loginUser);
+  const logoutUser = useSystemStore((s) => s.logoutUser);
 
   const [voiceStatus, setVoiceStatus] = useState<string>('');
   const [onboardingOpen, setOnboardingOpen] = useState(false);
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
 
   const runSystemCheck = async () => {
     const ok = await hasVietnameseVoice();
@@ -101,6 +109,94 @@ export default function SettingsTab(): React.ReactElement {
             </Pressable>
           </View>
         ) : null}
+
+        {/* Nhóm 0: Tài khoản & Đồng bộ */}
+        <View style={styles.groupWrapper}>
+          <AppText variant="caption" weight="600" color={theme.colors.textMuted} style={styles.groupLabel}>
+            {VI_STRINGS.settings.accountTitle.toUpperCase()}
+          </AppText>
+
+          <View
+            style={[
+              styles.card,
+              {
+                backgroundColor: highContrast ? theme.colors.surface : '#FFFFFF',
+                borderColor: highContrast ? theme.colors.border : 'rgba(241, 245, 249, 0.9)',
+              },
+            ]}
+          >
+            <View style={styles.accountRow}>
+              <View
+                style={[
+                  styles.avatarBox,
+                  {
+                    backgroundColor: userAccount.isLoggedIn
+                      ? (highContrast ? theme.colors.bg : '#EFF6FF')
+                      : (highContrast ? theme.colors.bg : '#F1F5F9'),
+                  },
+                ]}
+              >
+                <Ionicons
+                  name={userAccount.isLoggedIn ? 'person' : 'person-outline'}
+                  size={20}
+                  color={userAccount.isLoggedIn ? theme.colors.primary : theme.colors.textMuted}
+                />
+              </View>
+
+              <View style={{ flex: 1, gap: 2 }}>
+                <AppText variant="subhead" weight="700">
+                  {userAccount.isLoggedIn
+                    ? (userAccount.displayName || userAccount.email || VI_STRINGS.settings.accountLoggedInTitle)
+                    : VI_STRINGS.settings.accountGuestTitle}
+                </AppText>
+                <AppText variant="caption" weight="500" color={theme.colors.textMuted}>
+                  {userAccount.isLoggedIn
+                    ? (userAccount.email ?? 'nguoidung@nguoicam.vn')
+                    : VI_STRINGS.settings.accountGuestDesc}
+                </AppText>
+              </View>
+
+              {userAccount.isLoggedIn ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={VI_STRINGS.settings.accountLogoutButton}
+                  onPress={() => setLogoutModalOpen(true)}
+                  style={({ pressed }) => [
+                    styles.logoutSmallBtn,
+                    {
+                      borderColor: highContrast ? theme.colors.danger : '#FECACA',
+                      backgroundColor: highContrast ? theme.colors.bg : '#FEF2F2',
+                      opacity: pressed ? 0.85 : 1,
+                    },
+                  ]}
+                >
+                  <Ionicons name="log-out-outline" size={14} color={theme.colors.danger} />
+                  <AppText variant="caption" weight="600" color={theme.colors.danger}>
+                    {VI_STRINGS.settings.accountLogoutButton}
+                  </AppText>
+                </Pressable>
+              ) : (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={VI_STRINGS.settings.accountLoginButton}
+                  onPress={() => setLoginModalOpen(true)}
+                  style={({ pressed }) => [
+                    styles.loginSmallBtn,
+                    {
+                      backgroundColor: theme.colors.primary,
+                      opacity: pressed ? 0.88 : 1,
+                    },
+                  ]}
+                >
+                  <Ionicons name="log-in-outline" size={14} color={theme.colors.onPrimary} />
+                  <AppText variant="caption" weight="600" color={theme.colors.onPrimary}>
+                    {VI_STRINGS.settings.accountLoginButton}
+                  </AppText>
+                </Pressable>
+              )}
+            </View>
+          </View>
+        </View>
 
         {/* Nhóm 1: Hiển thị & Giao diện */}
         <View style={styles.groupWrapper}>
@@ -523,6 +619,278 @@ export default function SettingsTab(): React.ReactElement {
         visible={onboardingOpen}
         onClose={() => setOnboardingOpen(false)}
       />
+
+      {/* Modal Đăng nhập */}
+      <Modal
+        visible={loginModalOpen}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setLoginModalOpen(false)}
+      >
+        <View style={styles.sheetBackdrop}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={VI_STRINGS.settings.accountCancel}
+            style={StyleSheet.absoluteFill}
+            onPress={() => setLoginModalOpen(false)}
+          />
+          <View
+            style={[
+              styles.sheet,
+              {
+                backgroundColor: highContrast ? theme.colors.surface : '#FFFFFF',
+                borderColor: highContrast ? theme.colors.border : '#E2E8F0',
+              },
+            ]}
+          >
+            <View style={styles.sheetHandleBar} />
+            <View style={{ gap: 4 }}>
+              <AppText variant="title" weight="700">
+                {VI_STRINGS.settings.accountLoginModalTitle}
+              </AppText>
+              <AppText variant="caption" weight="500" color={theme.colors.textMuted}>
+                {VI_STRINGS.settings.accountLoginModalDesc}
+              </AppText>
+            </View>
+
+            <View style={{ gap: 10 }}>
+              <View style={{ gap: 4 }}>
+                <AppText variant="caption" weight="600" color={theme.colors.textMuted}>
+                  {VI_STRINGS.settings.accountEmailLabel}
+                </AppText>
+                <TextInput
+                  allowFontScaling={false}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  value={loginEmail}
+                  onChangeText={setLoginEmail}
+                  placeholder="nguoidung@nguoicam.vn"
+                  placeholderTextColor={theme.colors.textMuted}
+                  style={[
+                    styles.compactInput,
+                    {
+                      color: theme.colors.text,
+                      backgroundColor: highContrast ? theme.colors.bg : '#F8FAFC',
+                      borderColor: highContrast ? theme.colors.border : '#E2E8F0',
+                    },
+                  ]}
+                />
+              </View>
+
+              <View style={{ gap: 4 }}>
+                <AppText variant="caption" weight="600" color={theme.colors.textMuted}>
+                  {VI_STRINGS.settings.accountPasswordLabel}
+                </AppText>
+                <TextInput
+                  allowFontScaling={false}
+                  secureTextEntry
+                  value={loginPassword}
+                  onChangeText={setLoginPassword}
+                  placeholder="••••••••"
+                  placeholderTextColor={theme.colors.textMuted}
+                  style={[
+                    styles.compactInput,
+                    {
+                      color: theme.colors.text,
+                      backgroundColor: highContrast ? theme.colors.bg : '#F8FAFC',
+                      borderColor: highContrast ? theme.colors.border : '#E2E8F0',
+                    },
+                  ]}
+                />
+              </View>
+            </View>
+
+            <View style={{ gap: 8, marginTop: 4 }}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={VI_STRINGS.settings.accountSubmitLogin}
+                onPress={() => {
+                  loginUser(loginEmail || 'nguoidung@nguoicam.vn');
+                  setLoginModalOpen(false);
+                }}
+                style={({ pressed }) => [
+                  styles.primaryModalBtn,
+                  {
+                    backgroundColor: theme.colors.primary,
+                    opacity: pressed ? 0.88 : 1,
+                  },
+                ]}
+              >
+                <Ionicons name="log-in-outline" size={18} color={theme.colors.onPrimary} />
+                <AppText variant="subhead" weight="700" color={theme.colors.onPrimary}>
+                  {VI_STRINGS.settings.accountSubmitLogin}
+                </AppText>
+              </Pressable>
+
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={VI_STRINGS.settings.accountQuickLogin}
+                onPress={() => {
+                  loginUser('nguoidung@nguoicam.vn');
+                  setLoginModalOpen(false);
+                }}
+                style={({ pressed }) => [
+                  styles.secondaryModalBtn,
+                  {
+                    backgroundColor: highContrast ? theme.colors.bg : '#EFF6FF',
+                    borderColor: highContrast ? theme.colors.border : '#DBEAFE',
+                    opacity: pressed ? 0.88 : 1,
+                  },
+                ]}
+              >
+                <Ionicons name="flash-outline" size={16} color={theme.colors.primary} />
+                <AppText variant="caption" weight="600" color={theme.colors.primary}>
+                  {VI_STRINGS.settings.accountQuickLogin}
+                </AppText>
+              </Pressable>
+
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={VI_STRINGS.settings.accountCancel}
+                onPress={() => setLoginModalOpen(false)}
+                style={styles.cancelModalBtn}
+              >
+                <AppText variant="caption" weight="600" color={theme.colors.textMuted}>
+                  {VI_STRINGS.settings.accountCancel}
+                </AppText>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal Đăng xuất với 3 lựa chọn theo chuẩn B-06 */}
+      <Modal
+        visible={logoutModalOpen}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setLogoutModalOpen(false)}
+      >
+        <View style={styles.sheetBackdrop}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={VI_STRINGS.settings.logoutChoiceCancel}
+            style={StyleSheet.absoluteFill}
+            onPress={() => setLogoutModalOpen(false)}
+          />
+          <View
+            style={[
+              styles.sheet,
+              {
+                backgroundColor: highContrast ? theme.colors.surface : '#FFFFFF',
+                borderColor: highContrast ? theme.colors.border : '#E2E8F0',
+              },
+            ]}
+          >
+            <View style={styles.sheetHandleBar} />
+            <View style={{ gap: 4 }}>
+              <AppText variant="title" weight="700">
+                {VI_STRINGS.settings.logoutDialogTitle}
+              </AppText>
+              <AppText variant="caption" weight="500" color={theme.colors.textMuted}>
+                {VI_STRINGS.settings.logoutDialogMessage}
+              </AppText>
+            </View>
+
+            <View style={{ gap: 8 }}>
+              {/* Lựa chọn 1: Đồng bộ rồi đăng xuất */}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={VI_STRINGS.settings.logoutOptionSyncThenLogout}
+                onPress={() => {
+                  logoutUser();
+                  setLogoutModalOpen(false);
+                }}
+                style={({ pressed }) => [
+                  styles.logoutChoiceCard,
+                  {
+                    backgroundColor: highContrast ? theme.colors.bg : '#F8FAFC',
+                    borderColor: highContrast ? theme.colors.border : '#E2E8F0',
+                    opacity: pressed ? 0.88 : 1,
+                  },
+                ]}
+              >
+                <Ionicons name="cloud-upload-outline" size={20} color={theme.colors.primary} />
+                <View style={{ flex: 1, gap: 2 }}>
+                  <AppText variant="subhead" weight="700" color={theme.colors.primary}>
+                    {VI_STRINGS.settings.logoutOptionSyncThenLogout}
+                  </AppText>
+                  <AppText variant="caption" weight="500" color={theme.colors.textMuted}>
+                    Tải toàn bộ thẻ và cài đặt lên máy chủ trước khi thoát
+                  </AppText>
+                </View>
+              </Pressable>
+
+              {/* Lựa chọn 2: Giữ dữ liệu trên máy */}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={VI_STRINGS.settings.logoutOptionKeepLocal}
+                onPress={() => {
+                  logoutUser();
+                  setLogoutModalOpen(false);
+                }}
+                style={({ pressed }) => [
+                  styles.logoutChoiceCard,
+                  {
+                    backgroundColor: highContrast ? theme.colors.bg : '#F8FAFC',
+                    borderColor: highContrast ? theme.colors.border : '#E2E8F0',
+                    opacity: pressed ? 0.88 : 1,
+                  },
+                ]}
+              >
+                <Ionicons name="phone-portrait-outline" size={20} color={theme.colors.text} />
+                <View style={{ flex: 1, gap: 2 }}>
+                  <AppText variant="subhead" weight="700">
+                    {VI_STRINGS.settings.logoutOptionKeepLocal}
+                  </AppText>
+                  <AppText variant="caption" weight="500" color={theme.colors.textMuted}>
+                    Giữ thẻ cá nhân và lịch sử hoạt động trên thiết bị này
+                  </AppText>
+                </View>
+              </Pressable>
+
+              {/* Lựa chọn 3: Xóa dữ liệu cá nhân trên máy */}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={VI_STRINGS.settings.logoutOptionDiscardUnsynced}
+                onPress={() => {
+                  logoutUser();
+                  setLogoutModalOpen(false);
+                }}
+                style={({ pressed }) => [
+                  styles.logoutChoiceCard,
+                  {
+                    backgroundColor: highContrast ? theme.colors.bg : '#FEF2F2',
+                    borderColor: highContrast ? theme.colors.danger : '#FECACA',
+                    opacity: pressed ? 0.88 : 1,
+                  },
+                ]}
+              >
+                <Ionicons name="trash-outline" size={20} color={theme.colors.danger} />
+                <View style={{ flex: 1, gap: 2 }}>
+                  <AppText variant="subhead" weight="700" color={theme.colors.danger}>
+                    {VI_STRINGS.settings.logoutOptionDiscardUnsynced}
+                  </AppText>
+                  <AppText variant="caption" weight="500" color={theme.colors.textMuted}>
+                    Chỉ giữ lại bộ thẻ mặc định của hệ thống
+                  </AppText>
+                </View>
+              </Pressable>
+            </View>
+
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={VI_STRINGS.settings.logoutChoiceCancel}
+              onPress={() => setLogoutModalOpen(false)}
+              style={styles.cancelModalBtn}
+            >
+              <AppText variant="caption" weight="600" color={theme.colors.textMuted}>
+                {VI_STRINGS.settings.logoutChoiceCancel}
+              </AppText>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -680,5 +1048,92 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 10,
+  },
+  accountRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  avatarBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loginSmallBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+  },
+  logoutSmallBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  sheetBackdrop: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'transparent',
+  },
+  sheet: {
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    borderTopWidth: 1,
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderColor: '#E2E8F0',
+    padding: 20,
+    gap: 16,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: -8 },
+    shadowOpacity: 0.16,
+    shadowRadius: 24,
+    elevation: 24,
+  },
+  sheetHandleBar: {
+    width: 38,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#CBD5E1',
+    alignSelf: 'center',
+    marginBottom: 4,
+  },
+  primaryModalBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 14,
+  },
+  secondaryModalBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  cancelModalBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+  },
+  logoutChoiceCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 12,
+    borderRadius: 14,
+    borderWidth: 1,
   },
 });
