@@ -42,7 +42,7 @@ export default function TabsLayout(): React.ReactElement {
       screenOptions={{
         headerShown: false,
         lazy: false,
-        animation: 'fade',
+        animation: 'none',
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.textMuted,
         tabBarStyle: [
