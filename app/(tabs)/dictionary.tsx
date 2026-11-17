@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, Modal, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -77,8 +77,61 @@ export default function DictionaryTab(): React.ReactElement {
     return unsub;
   }, [engine, practicing, selectedWord]);
 
-  const filtered = SPEC_WORDS.filter((w) =>
-    w.vi.toLowerCase().includes(query.trim().toLowerCase())
+  const filtered = useMemo(
+    () =>
+      SPEC_WORDS.filter((w) =>
+        w.vi.toLowerCase().includes(query.trim().toLowerCase())
+      ),
+    [query]
+  );
+
+  const renderWordItem = useCallback(
+    ({ item }: { item: SpecWord }) => (
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={item.vi}
+        onPress={() => {
+          setSelectedWord(item);
+          setPracticing(false);
+          setMatched(false);
+        }}
+        style={({ pressed }) => [
+          styles.wordTile,
+          {
+            backgroundColor: highContrast ? theme.colors.surface : '#FFFFFF',
+            borderColor: highContrast ? theme.colors.border : 'rgba(241, 245, 249, 0.9)',
+            opacity: pressed ? 0.88 : 1,
+            transform: [{ scale: pressed ? 0.985 : 1 }],
+          },
+        ]}
+      >
+        <View style={styles.wordTileLeft}>
+          <View
+            style={[
+              styles.wordIconBadge,
+              { backgroundColor: highContrast ? theme.colors.bg : '#EFF6FF' },
+            ]}
+          >
+            <Ionicons name="hand-left-outline" size={20} color={theme.colors.primary} />
+          </View>
+          <View style={styles.wordTitleCol}>
+            <AppText variant="subhead" weight="600" color={theme.colors.text}>
+              {item.vi}
+            </AppText>
+            <View style={styles.groupBadge}>
+              <AppText variant="caption" weight="500" color={theme.colors.textMuted}>
+                {item.id} · {item.group}
+              </AppText>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.tileRightAction}>
+          <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
+        </View>
+      </Pressable>
+    ),
+    [highContrast, theme]
   );
 
   return (
@@ -160,52 +213,12 @@ export default function DictionaryTab(): React.ReactElement {
           data={filtered}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
+          initialNumToRender={8}
+          maxToRenderPerBatch={8}
+          windowSize={5}
+          removeClippedSubviews={true}
           contentContainerStyle={styles.listContent}
-          renderItem={({ item }) => (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={item.vi}
-              onPress={() => {
-                setSelectedWord(item);
-                setPracticing(false);
-                setMatched(false);
-              }}
-              style={({ pressed }) => [
-                styles.wordTile,
-                {
-                  backgroundColor: highContrast ? theme.colors.surface : '#FFFFFF',
-                  borderColor: highContrast ? theme.colors.border : 'rgba(241, 245, 249, 0.9)',
-                  opacity: pressed ? 0.88 : 1,
-                  transform: [{ scale: pressed ? 0.985 : 1 }],
-                },
-              ]}
-            >
-              <View style={styles.wordTileLeft}>
-                <View
-                  style={[
-                    styles.wordIconBadge,
-                    { backgroundColor: highContrast ? theme.colors.bg : '#EFF6FF' },
-                  ]}
-                >
-                  <Ionicons name="hand-left-outline" size={20} color={theme.colors.primary} />
-                </View>
-                <View style={styles.wordTitleCol}>
-                  <AppText variant="subhead" weight="600" color={theme.colors.text}>
-                    {item.vi}
-                  </AppText>
-                  <View style={styles.groupBadge}>
-                    <AppText variant="caption" weight="500" color={theme.colors.textMuted}>
-                      {item.id} · {item.group}
-                    </AppText>
-                  </View>
-                </View>
-              </View>
-
-              <View style={styles.tileRightAction}>
-                <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
-              </View>
-            </Pressable>
-          )}
+          renderItem={renderWordItem}
         />
       </View>
 

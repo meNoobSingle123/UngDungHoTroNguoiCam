@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   FlatList,
   Modal,
@@ -44,7 +44,10 @@ export default function CardsTab(): React.ReactElement {
   const [draftTopic, setDraftTopic] = useState<string>(VI_STRINGS.cards.topics[0]);
 
   void revision;
-  const visibleCards = listCards({ scope, topic: selectedTopic, query });
+  const visibleCards = useMemo(
+    () => listCards({ scope, topic: selectedTopic, query }),
+    [listCards, scope, selectedTopic, query, revision]
+  );
   const showUndo = undoUntil !== null && Date.now() <= undoUntil;
 
   const openCreate = () => {
@@ -85,6 +88,147 @@ export default function CardsTab(): React.ReactElement {
         return { bg: '#F1F5F9', text: '#334155' };
     }
   };
+
+  const renderCardItem = useCallback(
+    ({ item }: { item: (typeof visibleCards)[number] }) => {
+      const topicColors = getTopicColor(item.topic);
+      return (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={item.content}
+          onPress={() => speakVietnamese(item.content, { rate: speechRate })}
+          style={({ pressed }) => [
+            styles.cardTile,
+            {
+              backgroundColor: highContrast ? theme.colors.surface : '#FFFFFF',
+              borderColor: item.pinned
+                ? theme.colors.primary
+                : highContrast
+                  ? theme.colors.border
+                  : 'rgba(226, 232, 240, 0.7)',
+              opacity: pressed ? 0.92 : 1,
+            },
+          ]}
+        >
+          <View style={styles.cardHeaderRow}>
+            <View style={styles.cardHeaderLeft}>
+              {item.topic ? (
+                <View
+                  style={[
+                    styles.topicBadge,
+                    {
+                      backgroundColor: topicColors.bg,
+                    },
+                  ]}
+                >
+                  <AppText variant="caption" weight="600" color={topicColors.text}>
+                    {item.topic}
+                  </AppText>
+                </View>
+              ) : null}
+              {item.isDefault ? (
+                <AppText variant="caption" color={theme.colors.textMuted}>
+                  · {VI_STRINGS.cards.defaultTag}
+                </AppText>
+              ) : null}
+            </View>
+
+            <View
+              style={[
+                styles.speakIconCircle,
+                { backgroundColor: highContrast ? theme.colors.bg : '#EEF2FF' },
+              ]}
+            >
+              <Ionicons
+                name="volume-medium"
+                size={16}
+                color={theme.colors.primary}
+              />
+            </View>
+          </View>
+
+          <AppText variant="subhead" weight="600" style={styles.cardContentText}>
+            {item.content}
+          </AppText>
+
+          {!item.isDefault ? (
+            <View style={[styles.cardActionsRow, { borderTopColor: highContrast ? theme.colors.border : '#F1F5F9' }]}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={
+                  item.pinned ? VI_STRINGS.cards.unpinButton : VI_STRINGS.cards.pinButton
+                }
+                onPress={() => togglePin(item.id)}
+                style={[
+                  styles.actionPill,
+                  {
+                    borderColor: item.pinned ? theme.colors.primary : 'transparent',
+                    backgroundColor: item.pinned
+                      ? highContrast
+                        ? theme.colors.surface
+                        : '#EEF2FF'
+                      : highContrast
+                        ? theme.colors.surface
+                        : '#F8FAFC',
+                  },
+                ]}
+              >
+                <Ionicons
+                  name={item.pinned ? 'bookmark' : 'bookmark-outline'}
+                  size={13}
+                  color={item.pinned ? theme.colors.primary : theme.colors.textMuted}
+                />
+                <AppText
+                  variant="caption"
+                  weight="600"
+                  color={item.pinned ? theme.colors.primary : theme.colors.textMuted}
+                >
+                  {item.pinned ? VI_STRINGS.cards.unpinButton : VI_STRINGS.cards.pinButton}
+                </AppText>
+              </Pressable>
+
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={VI_STRINGS.cards.editButton}
+                onPress={() => openEdit(item.id, item.content, item.topic)}
+                style={[
+                  styles.actionPill,
+                  {
+                    backgroundColor: highContrast ? theme.colors.surface : '#F8FAFC',
+                    borderColor: 'transparent',
+                  },
+                ]}
+              >
+                <Ionicons name="create-outline" size={13} color={theme.colors.textMuted} />
+                <AppText variant="caption" weight="600" color={theme.colors.textMuted}>
+                  {VI_STRINGS.cards.editButton}
+                </AppText>
+              </Pressable>
+
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={VI_STRINGS.cards.deleteButton}
+                onPress={() => deleteCard(item.id)}
+                style={[
+                  styles.actionPill,
+                  {
+                    backgroundColor: highContrast ? theme.colors.surface : '#F8FAFC',
+                    borderColor: 'transparent',
+                  },
+                ]}
+              >
+                <Ionicons name="trash-outline" size={13} color={theme.colors.danger} />
+                <AppText variant="caption" weight="600" color={theme.colors.danger}>
+                  {VI_STRINGS.cards.deleteButton}
+                </AppText>
+              </Pressable>
+            </View>
+          ) : null}
+        </Pressable>
+      );
+    },
+    [highContrast, theme, speechRate, togglePin, openEdit, deleteCard]
+  );
 
   return (
     <SafeAreaView edges={['top']} style={[styles.root, { backgroundColor: highContrast ? theme.colors.bg : '#F8FAFC' }]}>
@@ -265,6 +409,10 @@ export default function CardsTab(): React.ReactElement {
           data={visibleCards}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
+          initialNumToRender={8}
+          maxToRenderPerBatch={8}
+          windowSize={5}
+          removeClippedSubviews={true}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <View style={styles.emptyIconCircle}>
@@ -276,143 +424,7 @@ export default function CardsTab(): React.ReactElement {
             </View>
           }
           contentContainerStyle={styles.listContent}
-          renderItem={({ item }) => {
-            const topicColors = getTopicColor(item.topic);
-            return (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={item.content}
-                onPress={() => speakVietnamese(item.content, { rate: speechRate })}
-                style={({ pressed }) => [
-                  styles.cardTile,
-                  {
-                    backgroundColor: highContrast ? theme.colors.surface : '#FFFFFF',
-                    borderColor: item.pinned
-                      ? theme.colors.primary
-                      : highContrast
-                        ? theme.colors.border
-                        : 'rgba(226, 232, 240, 0.7)',
-                    opacity: pressed ? 0.92 : 1,
-                  },
-                ]}
-              >
-                <View style={styles.cardHeaderRow}>
-                  <View style={styles.cardHeaderLeft}>
-                    {item.topic ? (
-                      <View
-                        style={[
-                          styles.topicBadge,
-                          {
-                            backgroundColor: topicColors.bg,
-                          },
-                        ]}
-                      >
-                        <AppText variant="caption" weight="600" color={topicColors.text}>
-                          {item.topic}
-                        </AppText>
-                      </View>
-                    ) : null}
-                    {item.isDefault ? (
-                      <AppText variant="caption" color={theme.colors.textMuted}>
-                        · {VI_STRINGS.cards.defaultTag}
-                      </AppText>
-                    ) : null}
-                  </View>
-
-                  <View
-                    style={[
-                      styles.speakIconCircle,
-                      { backgroundColor: highContrast ? theme.colors.bg : '#EEF2FF' },
-                    ]}
-                  >
-                    <Ionicons
-                      name="volume-medium"
-                      size={16}
-                      color={theme.colors.primary}
-                    />
-                  </View>
-                </View>
-
-                <AppText variant="subhead" weight="600" style={styles.cardContentText}>
-                  {item.content}
-                </AppText>
-
-                {!item.isDefault ? (
-                  <View style={[styles.cardActionsRow, { borderTopColor: highContrast ? theme.colors.border : '#F1F5F9' }]}>
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel={
-                        item.pinned ? VI_STRINGS.cards.unpinButton : VI_STRINGS.cards.pinButton
-                      }
-                      onPress={() => togglePin(item.id)}
-                      style={[
-                        styles.actionPill,
-                        {
-                          borderColor: item.pinned ? theme.colors.primary : 'transparent',
-                          backgroundColor: item.pinned
-                            ? highContrast
-                              ? theme.colors.surface
-                              : '#EEF2FF'
-                            : highContrast
-                              ? theme.colors.surface
-                              : '#F8FAFC',
-                        },
-                      ]}
-                    >
-                      <Ionicons
-                        name={item.pinned ? 'bookmark' : 'bookmark-outline'}
-                        size={13}
-                        color={item.pinned ? theme.colors.primary : theme.colors.textMuted}
-                      />
-                      <AppText
-                        variant="caption"
-                        weight="600"
-                        color={item.pinned ? theme.colors.primary : theme.colors.textMuted}
-                      >
-                        {item.pinned ? VI_STRINGS.cards.unpinButton : VI_STRINGS.cards.pinButton}
-                      </AppText>
-                    </Pressable>
-
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel={VI_STRINGS.cards.editButton}
-                      onPress={() => openEdit(item.id, item.content, item.topic)}
-                      style={[
-                        styles.actionPill,
-                        {
-                          backgroundColor: highContrast ? theme.colors.surface : '#F8FAFC',
-                          borderColor: 'transparent',
-                        },
-                      ]}
-                    >
-                      <Ionicons name="create-outline" size={13} color={theme.colors.textMuted} />
-                      <AppText variant="caption" weight="600" color={theme.colors.textMuted}>
-                        {VI_STRINGS.cards.editButton}
-                      </AppText>
-                    </Pressable>
-
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel={VI_STRINGS.cards.deleteButton}
-                      onPress={() => deleteCard(item.id)}
-                      style={[
-                        styles.actionPill,
-                        {
-                          backgroundColor: highContrast ? theme.colors.surface : '#F8FAFC',
-                          borderColor: 'transparent',
-                        },
-                      ]}
-                    >
-                      <Ionicons name="trash-outline" size={13} color={theme.colors.danger} />
-                      <AppText variant="caption" weight="600" color={theme.colors.danger}>
-                        {VI_STRINGS.cards.deleteButton}
-                      </AppText>
-                    </Pressable>
-                  </View>
-                ) : null}
-              </Pressable>
-            );
-          }}
+          renderItem={renderCardItem}
         />
       </View>
 
