@@ -16,6 +16,7 @@ import { TopBar } from '../../src/core/theme/TopBar.tsx';
 import type { FontScaleLevel } from '../../src/core/theme/tokens.ts';
 import { hasVietnameseVoice, speakVietnamese } from '../../src/core/tts/speechService.ts';
 import { OnboardingModal } from '../../src/features/onboarding/OnboardingModal.tsx';
+import { SosButton } from '../../src/features/sos/SosButton.tsx';
 
 const FONT_LEVEL_ORDER: FontScaleLevel[] = ['small', 'medium', 'large', 'max'];
 const SPEECH_RATES = [0.75, 1.0, 1.25, 1.5] as const;
@@ -330,6 +331,26 @@ export default function SettingsTab(): React.ReactElement {
               </View>
             </View>
 
+            <View
+              style={[
+                styles.emergencyTriggerRow,
+                {
+                  backgroundColor: highContrast ? theme.colors.bg : '#FEF2F2',
+                  borderColor: highContrast ? theme.colors.danger : '#FECACA',
+                },
+              ]}
+            >
+              <View style={{ flex: 1, gap: 2 }}>
+                <AppText variant="caption" weight="700" color={theme.colors.danger}>
+                  KÍCH HOẠT BÁO ĐỘNG SOS
+                </AppText>
+                <AppText variant="caption" weight="500" color={theme.colors.textMuted}>
+                  Nhấn giữ nút đỏ 1.5 giây để báo động
+                </AppText>
+              </View>
+              <SosButton />
+            </View>
+
             <TextInput
               allowFontScaling={false}
               multiline
@@ -640,6 +661,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     paddingVertical: 4,
+  },
+  emergencyTriggerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 12,
   },
   statusDot: {
     width: 10,

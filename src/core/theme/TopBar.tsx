@@ -8,9 +8,10 @@ import { AppText, useAppTheme } from './ThemeProvider.tsx';
 
 export interface TopBarProps {
   title: string;
+  showSos?: boolean;
 }
 
-export function TopBar({ title }: TopBarProps): React.ReactElement {
+export function TopBar({ title, showSos = false }: TopBarProps): React.ReactElement {
   const theme = useAppTheme();
   const statusLight = useSystemStore((s) => s.statusLight);
   const highContrast = useSystemStore((s) => s.highContrast);
@@ -108,10 +109,10 @@ export function TopBar({ title }: TopBarProps): React.ReactElement {
           {title}
         </AppText>
 
-        <SosButton />
+        {showSos ? <SosButton /> : <View style={styles.spacer} />}
       </View>
 
-      {sosHint ? (
+      {showSos && sosHint ? (
         <View style={styles.hintContainer}>
           <AppText variant="caption" weight="600" color={theme.colors.warning}>
             {sosHint}
@@ -125,6 +126,10 @@ export function TopBar({ title }: TopBarProps): React.ReactElement {
 const styles = StyleSheet.create({
   container: {
     paddingBottom: 2,
+  },
+  spacer: {
+    width: 44,
+    height: 44,
   },
   row: {
     flexDirection: 'row',

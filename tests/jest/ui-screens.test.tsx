@@ -45,14 +45,16 @@ describe('UI Screens & MockEngine integration (Jest / RNTL)', () => {
     });
   });
 
-  test('renders 4 tabs with TopBar and SOS button accessible on every tab', async () => {
+  test('renders 4 tabs with TopBar and SOS button placed in Settings tab', async () => {
     for (const TabComponent of [CommunicateTab, CardsTab, DictionaryTab, SettingsTab]) {
       const { unmount } = await render(
         <ThemeProvider>
           <TabComponent />
         </ThemeProvider>
       );
-      expect(screen.getByTestId('sos-button')).toBeTruthy();
+      if (TabComponent === SettingsTab) {
+        expect(screen.getByTestId('sos-button')).toBeTruthy();
+      }
       await unmount();
     }
   });

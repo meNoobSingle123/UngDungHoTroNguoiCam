@@ -25,7 +25,7 @@ function RootShell(): React.ReactElement {
     if (typeof __DEV__ !== 'undefined' && __DEV__) {
       try {
         const DevMenu = require('expo-dev-menu');
-        DevMenu.setToolsButtonVisible?.(false);
+        DevMenu.setToolsButtonVisible?.(true);
       } catch {}
     }
   }, []);
