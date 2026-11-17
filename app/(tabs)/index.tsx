@@ -386,6 +386,12 @@ export default function CommunicateTab(): React.ReactElement {
         onRequestClose={() => setTypeSheetOpen(false)}
       >
         <View style={styles.sheetBackdrop}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={VI_STRINGS.communicate.closeButton}
+            style={StyleSheet.absoluteFill}
+            onPress={() => setTypeSheetOpen(false)}
+          />
           <View
             style={[
               styles.sheet,
@@ -478,6 +484,12 @@ export default function CommunicateTab(): React.ReactElement {
         onRequestClose={() => setOtherSheetOpen(false)}
       >
         <View style={styles.sheetBackdrop}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={VI_STRINGS.communicate.closeButton}
+            style={StyleSheet.absoluteFill}
+            onPress={() => setOtherSheetOpen(false)}
+          />
           <View
             style={[
               styles.sheet,
@@ -769,16 +781,22 @@ const styles = StyleSheet.create({
   },
   sheetBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    backgroundColor: 'transparent',
     justifyContent: 'flex-end',
   },
   sheet: {
     minHeight: 320,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    borderTopWidth: 1,
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderColor: '#E2E8F0',
     shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 20,
-    elevation: 12,
+    shadowOffset: { width: 0, height: -8 },
+    shadowOpacity: 0.16,
+    shadowRadius: 24,
+    elevation: 24,
   },
   sheetHandleBar: {
     width: 36,

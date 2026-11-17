@@ -54,7 +54,7 @@ export default function SettingsTab(): React.ReactElement {
   const runSystemCheck = async () => {
     const ok = await hasVietnameseVoice();
     setStatusLight(ok ? 'ready' : 'attention');
-    setVoiceStatus(ok ? VI_STRINGS.statusLight.ready : VI_STRINGS.statusLight.attention);
+    setVoiceStatus(ok ? 'Giọng đọc hoạt động tốt' : 'Cần cài giọng tiếng Việt');
   };
 
   const handleTestSpeech = () => {
@@ -542,7 +542,7 @@ export default function SettingsTab(): React.ReactElement {
                 ]}
               />
               <AppText variant="caption" weight="600" color={theme.colors.text} style={{ flex: 1 }}>
-                {VI_STRINGS.statusLight[statusLight]} {voiceStatus ? `· ${voiceStatus}` : ''}
+                {voiceStatus || (statusLight === 'ready' ? 'Hệ thống giọng đọc hoạt động tốt' : 'Cần kiểm tra giọng đọc')}
               </AppText>
               <Pressable
                 accessibilityRole="button"
