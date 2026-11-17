@@ -233,6 +233,15 @@ export default function DictionaryTab(): React.ReactElement {
         }}
       >
         <View style={styles.sheetBackdrop}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={VI_STRINGS.communicate.closeButton}
+            style={StyleSheet.absoluteFill}
+            onPress={() => {
+              setPracticing(false);
+              setSelectedWord(null);
+            }}
+          />
           <View
             style={[
               styles.sheet,

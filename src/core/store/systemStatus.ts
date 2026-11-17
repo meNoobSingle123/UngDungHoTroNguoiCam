@@ -6,6 +6,7 @@ import {
 
 export type SystemStatusLevel = 'ready' | 'attention' | 'unavailable';
 export type OnboardingStatus = 'pending' | 'completed' | 'skipped';
+export type VoiceGender = 'female' | 'male';
 export type PermissionCheckState =
   | 'unknown'
   | 'granted'
@@ -23,6 +24,7 @@ export interface PersistedSettingsSnapshot {
   fontLevel?: FontScaleLevel;
   highContrast?: boolean;
   speechRate?: number;
+  voiceGender?: VoiceGender;
   emergencyInfo?: string;
   onboardingStatus?: OnboardingStatus;
 }
@@ -41,6 +43,7 @@ function notifyPersist(state: SystemStoreState): void {
     fontLevel: state.fontLevel,
     highContrast: state.highContrast,
     speechRate: state.speechRate,
+    voiceGender: state.voiceGender,
     emergencyInfo: state.emergencyInfo,
     onboardingStatus: state.onboardingStatus,
   });
@@ -52,6 +55,7 @@ export interface SystemStoreState {
   fontLevel: FontScaleLevel;
   highContrast: boolean;
   speechRate: number;
+  voiceGender: VoiceGender;
   reduceMotion: boolean;
   isFlipped180: boolean;
   emergencyInfo: string;
@@ -64,6 +68,7 @@ export interface SystemStoreState {
   initFontScaleFromSystem: (systemFontScale: number) => void;
   setHighContrast: (enabled: boolean) => void;
   setSpeechRate: (rate: number) => void;
+  setVoiceGender: (gender: VoiceGender) => void;
   setReduceMotion: (enabled: boolean) => void;
   toggleFlip180: () => void;
   setEmergencyInfo: (text: string) => void;
@@ -80,6 +85,7 @@ export const useSystemStore = create<SystemStoreState>((set, get) => ({
   fontLevel: 'small',
   highContrast: false,
   speechRate: 1.0,
+  voiceGender: 'female',
   reduceMotion: false,
   isFlipped180: false,
   emergencyInfo: '',
@@ -108,6 +114,10 @@ export const useSystemStore = create<SystemStoreState>((set, get) => ({
     set({ speechRate });
     notifyPersist(get());
   },
+  setVoiceGender: (voiceGender) => {
+    set({ voiceGender });
+    notifyPersist(get());
+  },
   setReduceMotion: (reduceMotion) => set({ reduceMotion }),
   toggleFlip180: () => set((s) => ({ isFlipped180: !s.isFlipped180 })),
   setEmergencyInfo: (emergencyInfo) => {
@@ -124,6 +134,7 @@ export const useSystemStore = create<SystemStoreState>((set, get) => ({
       fontLevel: snapshot.fontLevel ?? s.fontLevel,
       highContrast: snapshot.highContrast ?? s.highContrast,
       speechRate: snapshot.speechRate ?? s.speechRate,
+      voiceGender: snapshot.voiceGender ?? s.voiceGender,
       emergencyInfo: snapshot.emergencyInfo ?? s.emergencyInfo,
       onboardingStatus: snapshot.onboardingStatus ?? s.onboardingStatus,
     })),

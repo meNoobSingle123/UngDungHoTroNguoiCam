@@ -26,6 +26,7 @@ export default function SettingsTab(): React.ReactElement {
   const highContrast = theme.isHighContrast;
   const fontLevel = useSystemStore((s) => s.fontLevel);
   const speechRate = useSystemStore((s) => s.speechRate);
+  const voiceGender = useSystemStore((s) => s.voiceGender);
   const emergencyInfo = useSystemStore((s) => s.emergencyInfo);
   const statusLight = useSystemStore((s) => s.statusLight);
   const onboardingStatus = useSystemStore((s) => s.onboardingStatus);
@@ -34,6 +35,7 @@ export default function SettingsTab(): React.ReactElement {
   const setFontLevel = useSystemStore((s) => s.setFontLevel);
   const setHighContrast = useSystemStore((s) => s.setHighContrast);
   const setSpeechRate = useSystemStore((s) => s.setSpeechRate);
+  const setVoiceGender = useSystemStore((s) => s.setVoiceGender);
   const setEmergencyInfo = useSystemStore((s) => s.setEmergencyInfo);
   const setStatusLight = useSystemStore((s) => s.setStatusLight);
   const clearHistory = useSystemStore((s) => s.clearHistory);
@@ -45,6 +47,15 @@ export default function SettingsTab(): React.ReactElement {
     const ok = await hasVietnameseVoice();
     setStatusLight(ok ? 'ready' : 'attention');
     setVoiceStatus(ok ? VI_STRINGS.statusLight.ready : VI_STRINGS.statusLight.attention);
+  };
+
+  const handleTestSpeech = () => {
+    speakVietnamese(
+      voiceGender === 'male'
+        ? 'Xin chào, đây là giọng đọc nam của bạn.'
+        : 'Xin chào, đây là giọng đọc nữ của bạn.',
+      { rate: speechRate, gender: voiceGender }
+    );
   };
 
   return (
@@ -66,9 +77,9 @@ export default function SettingsTab(): React.ReactElement {
               },
             ]}
           >
-            <View style={styles.sectionHeaderRow}>
-              <Ionicons name="information-circle" size={20} color={theme.colors.warning} />
-              <AppText variant="subhead" weight="600" color={theme.colors.warning} style={{ flex: 1 }}>
+            <View style={styles.compactRow}>
+              <Ionicons name="information-circle" size={18} color={theme.colors.warning} />
+              <AppText variant="caption" weight="600" color={theme.colors.warning} style={{ flex: 1 }}>
                 {VI_STRINGS.settings.onboardingReminder}
               </AppText>
             </View>
@@ -77,21 +88,21 @@ export default function SettingsTab(): React.ReactElement {
               accessibilityLabel={VI_STRINGS.settings.openOnboardingButton}
               onPress={() => setOnboardingOpen(true)}
               style={({ pressed }) => [
-                styles.primaryBtn,
+                styles.compactBtn,
                 {
                   backgroundColor: theme.colors.primary,
                   opacity: pressed ? 0.88 : 1,
                 },
               ]}
             >
-              <AppText variant="label" weight="600" color={theme.colors.onPrimary}>
+              <AppText variant="caption" weight="600" color={theme.colors.onPrimary}>
                 {VI_STRINGS.settings.openOnboardingButton}
               </AppText>
             </Pressable>
           </View>
         ) : null}
 
-        {/* Nhóm 1: Giao diện & Kích thước chữ */}
+        {/* Nhóm 1: Hiển thị & Giao diện */}
         <View style={styles.groupWrapper}>
           <AppText variant="caption" weight="600" color={theme.colors.textMuted} style={styles.groupLabel}>
             HIỂN THỊ & GIAO DIỆN
@@ -106,21 +117,14 @@ export default function SettingsTab(): React.ReactElement {
               },
             ]}
           >
-            <View style={styles.sectionHeaderRow}>
-              <View style={[styles.sectionIconBadge, { backgroundColor: highContrast ? theme.colors.bg : '#EFF6FF' }]}>
-                <Ionicons name="text-outline" size={18} color={theme.colors.primary} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <AppText variant="subhead" weight="600">
-                  {VI_STRINGS.settings.fontScaleTitle}
-                </AppText>
-                <AppText variant="caption" weight="500" color={theme.colors.textMuted}>
-                  Tùy chỉnh độ lớn chữ trên toàn ứng dụng
-                </AppText>
-              </View>
+            {/* Cỡ chữ */}
+            <View style={styles.rowHeader}>
+              <Ionicons name="text-outline" size={16} color={theme.colors.primary} />
+              <AppText variant="subhead" weight="600" style={{ flex: 1 }}>
+                {VI_STRINGS.settings.fontScaleTitle}
+              </AppText>
             </View>
 
-            {/* Bộ chọn phân đoạn cỡ chữ */}
             <View
               style={[
                 styles.segmentedRow,
@@ -165,25 +169,23 @@ export default function SettingsTab(): React.ReactElement {
               })}
             </View>
 
-            {/* Khung xem trước trực tiếp cỡ chữ */}
+            {/* Mẫu chữ xem trước nhỏ gọn */}
             <View
               style={[
-                styles.previewBox,
+                styles.previewRow,
                 {
                   backgroundColor: highContrast ? theme.colors.bg : '#F8FAFC',
                   borderColor: highContrast ? theme.colors.border : '#E2E8F0',
                 },
               ]}
             >
-              <AppText variant="caption" weight="600" color={theme.colors.textMuted}>
-                Văn bản mẫu xem trước:
-              </AppText>
-              <AppText variant="body" weight="500" color={theme.colors.text}>
-                Chào bạn, tôi đang dùng ứng dụng giao tiếp hỗ trợ người khiếm thính.
+              <Ionicons name="eye-outline" size={14} color={theme.colors.textMuted} />
+              <AppText variant="body" weight="500" color={theme.colors.text} numberOfLines={1} style={{ flex: 1 }}>
+                Chào bạn, tôi đang dùng ứng dụng giao tiếp.
               </AppText>
             </View>
 
-            {/* Dòng chế độ tương phản cao */}
+            {/* Chế độ tương phản cao */}
             <View style={[styles.switchRow, { borderTopColor: highContrast ? theme.colors.border : '#F1F5F9' }]}>
               <View style={styles.switchLabelCol}>
                 <AppText variant="subhead" weight="600">
@@ -219,90 +221,146 @@ export default function SettingsTab(): React.ReactElement {
               },
             ]}
           >
-            <View style={styles.sectionHeaderRow}>
-              <View style={[styles.sectionIconBadge, { backgroundColor: highContrast ? theme.colors.bg : '#EFF6FF' }]}>
-                <Ionicons name="speedometer-outline" size={18} color={theme.colors.primary} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <AppText variant="subhead" weight="600">
-                  {VI_STRINGS.settings.speechRateTitle}: {speechRate}x
-                </AppText>
-                <AppText variant="caption" weight="500" color={theme.colors.textMuted}>
-                  Điều chỉnh tốc độ phát âm thanh tiếng Việt
+            {/* Điều chỉnh giọng Nam / Nữ */}
+            <View style={styles.subSectionRow}>
+              <View style={styles.rowHeader}>
+                <Ionicons name="person-outline" size={16} color={theme.colors.primary} />
+                <AppText variant="subhead" weight="600" style={{ flex: 1 }}>
+                  {VI_STRINGS.settings.voiceGenderTitle}
                 </AppText>
               </View>
-            </View>
 
-            <View
-              style={[
-                styles.segmentedRow,
-                {
-                  backgroundColor: highContrast ? theme.colors.bg : '#F1F5F9',
-                },
-              ]}
-            >
-              {SPEECH_RATES.map((rate) => {
-                const active = speechRate === rate;
-                return (
-                  <Pressable
-                    key={rate}
-                    accessibilityRole="button"
-                    accessibilityLabel={`${rate}x`}
-                    onPress={() => setSpeechRate(rate)}
-                    style={[
-                      styles.segmentBtn,
-                      active
-                        ? highContrast
-                          ? { backgroundColor: theme.colors.primary }
-                          : styles.segmentBtnActiveLight
-                        : undefined,
-                    ]}
-                  >
-                    <AppText
-                      variant="caption"
-                      weight={active ? '700' : '500'}
-                      color={
+              <View
+                style={[
+                  styles.genderSegmentedRow,
+                  { backgroundColor: highContrast ? theme.colors.bg : '#F1F5F9' },
+                ]}
+              >
+                {(['female', 'male'] as const).map((g) => {
+                  const active = voiceGender === g;
+                  const label = g === 'female' ? VI_STRINGS.settings.voiceGenderFemale : VI_STRINGS.settings.voiceGenderMale;
+                  const icon = g === 'female' ? 'woman-outline' : 'man-outline';
+                  return (
+                    <Pressable
+                      key={g}
+                      accessibilityRole="button"
+                      accessibilityLabel={label}
+                      onPress={() => setVoiceGender(g)}
+                      style={[
+                        styles.genderBtn,
                         active
                           ? highContrast
-                            ? theme.colors.onPrimary
-                            : theme.colors.primary
-                          : theme.colors.textMuted
-                      }
+                            ? { backgroundColor: theme.colors.primary }
+                            : styles.segmentBtnActiveLight
+                          : undefined,
+                      ]}
                     >
-                      {rate}x
-                    </AppText>
-                  </Pressable>
-                );
-              })}
+                      <Ionicons
+                        name={icon}
+                        size={15}
+                        color={
+                          active
+                            ? highContrast
+                              ? theme.colors.onPrimary
+                              : theme.colors.primary
+                            : theme.colors.textMuted
+                        }
+                      />
+                      <AppText
+                        variant="caption"
+                        weight={active ? '700' : '500'}
+                        color={
+                          active
+                            ? highContrast
+                              ? theme.colors.onPrimary
+                              : theme.colors.primary
+                            : theme.colors.textMuted
+                        }
+                      >
+                        {label}
+                      </AppText>
+                    </Pressable>
+                  );
+                })}
+              </View>
             </View>
 
+            {/* Tốc độ đọc */}
+            <View style={styles.subSectionRow}>
+              <View style={styles.rowHeader}>
+                <Ionicons name="speedometer-outline" size={16} color={theme.colors.primary} />
+                <AppText variant="subhead" weight="600" style={{ flex: 1 }}>
+                  {VI_STRINGS.settings.speechRateTitle}: {speechRate}x
+                </AppText>
+              </View>
+
+              <View
+                style={[
+                  styles.segmentedRow,
+                  {
+                    backgroundColor: highContrast ? theme.colors.bg : '#F1F5F9',
+                  },
+                ]}
+              >
+                {SPEECH_RATES.map((rate) => {
+                  const active = speechRate === rate;
+                  return (
+                    <Pressable
+                      key={rate}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${rate}x`}
+                      onPress={() => setSpeechRate(rate)}
+                      style={[
+                        styles.segmentBtn,
+                        active
+                          ? highContrast
+                            ? { backgroundColor: theme.colors.primary }
+                            : styles.segmentBtnActiveLight
+                          : undefined,
+                      ]}
+                    >
+                      <AppText
+                        variant="caption"
+                        weight={active ? '700' : '500'}
+                        color={
+                          active
+                            ? highContrast
+                              ? theme.colors.onPrimary
+                              : theme.colors.primary
+                            : theme.colors.textMuted
+                        }
+                      >
+                        {rate}x
+                      </AppText>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+
+            {/* Nút nghe thử giọng đọc gọn gàng */}
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={VI_STRINGS.settings.testSpeechButton}
-              onPress={() =>
-                speakVietnamese(VI_STRINGS.settings.testSpeechSample, {
-                  rate: speechRate,
-                })
-              }
+              onPress={handleTestSpeech}
               style={({ pressed }) => [
-                styles.primaryBtn,
+                styles.compactBtn,
                 {
                   backgroundColor: highContrast ? theme.colors.bg : '#EFF6FF',
-                  borderWidth: 1,
                   borderColor: highContrast ? theme.colors.border : '#DBEAFE',
                   opacity: pressed ? 0.88 : 1,
                 },
               ]}
             >
-              <Ionicons name="volume-high-outline" size={18} color={theme.colors.primary} />
-              <AppText variant="subhead" weight="600" color={theme.colors.primary}>
-                {VI_STRINGS.settings.testSpeechButton}
+              <Ionicons name="volume-high-outline" size={16} color={theme.colors.primary} />
+              <AppText variant="caption" weight="600" color={theme.colors.primary}>
+                {VI_STRINGS.settings.testSpeechButton} ({voiceGender === 'male' ? 'Nam' : 'Nữ'} · {speechRate}x)
               </AppText>
             </Pressable>
           </View>
         </View>
 
-        {/* Nhóm 3: Thông tin khẩn cấp SOS */}
+        {/* Nhóm 3: Thông tin khẩn cấp & SOS */}
         <View style={styles.groupWrapper}>
           <AppText variant="caption" weight="600" color={theme.colors.textMuted} style={styles.groupLabel}>
             THÔNG TIN KHẨN CẤP
@@ -317,20 +375,6 @@ export default function SettingsTab(): React.ReactElement {
               },
             ]}
           >
-            <View style={styles.sectionHeaderRow}>
-              <View style={[styles.sectionIconBadge, { backgroundColor: highContrast ? theme.colors.bg : '#FEE2E2' }]}>
-                <Ionicons name="medkit-outline" size={18} color={theme.colors.danger} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <AppText variant="subhead" weight="600">
-                  {VI_STRINGS.settings.emergencyTitle}
-                </AppText>
-                <AppText variant="caption" weight="500" color={theme.colors.textMuted}>
-                  Hiện trên toàn màn hình khi giữ nút SOS đỏ
-                </AppText>
-              </View>
-            </View>
-
             <View
               style={[
                 styles.emergencyTriggerRow,
@@ -342,10 +386,10 @@ export default function SettingsTab(): React.ReactElement {
             >
               <View style={{ flex: 1, gap: 2 }}>
                 <AppText variant="caption" weight="700" color={theme.colors.danger}>
-                  KÍCH HOẠT BÁO ĐỘNG SOS
+                  BÁO ĐỘNG SOS
                 </AppText>
                 <AppText variant="caption" weight="500" color={theme.colors.textMuted}>
-                  Nhấn giữ nút đỏ 1.5 giây để báo động
+                  Giữ nút đỏ 1.5s để kích hoạt
                 </AppText>
               </View>
               <SosButton />
@@ -359,9 +403,9 @@ export default function SettingsTab(): React.ReactElement {
               placeholder={VI_STRINGS.settings.emergencyPlaceholder}
               placeholderTextColor={theme.colors.textMuted}
               style={[
-                styles.input,
+                styles.compactInput,
                 {
-                  fontSize: theme.fonts.body,
+                  fontSize: 14,
                   color: theme.colors.text,
                   backgroundColor: highContrast ? theme.colors.bg : '#F8FAFC',
                   borderColor: highContrast ? theme.colors.border : '#E2E8F0',
@@ -371,10 +415,10 @@ export default function SettingsTab(): React.ReactElement {
           </View>
         </View>
 
-        {/* Nhóm 4: Kiểm tra hệ thống & Giới thiệu */}
+        {/* Nhóm 4: Hệ thống & Giới thiệu */}
         <View style={styles.groupWrapper}>
           <AppText variant="caption" weight="600" color={theme.colors.textMuted} style={styles.groupLabel}>
-            HỆ THỐNG & GIỚI THIỆU
+            HỆ THỐNG & TRỢ GIÚP
           </AppText>
 
           <View
@@ -386,19 +430,8 @@ export default function SettingsTab(): React.ReactElement {
               },
             ]}
           >
-            <View style={styles.sectionHeaderRow}>
-              <View style={[styles.sectionIconBadge, { backgroundColor: highContrast ? theme.colors.bg : '#EFF6FF' }]}>
-                <Ionicons name="hardware-chip-outline" size={18} color={theme.colors.primary} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <AppText variant="subhead" weight="600">
-                  {VI_STRINGS.settings.systemCheckTitle}
-                </AppText>
-              </View>
-            </View>
-
             {/* Trạng thái hệ thống */}
-            <View style={styles.systemStatusPill}>
+            <View style={styles.compactRow}>
               <View
                 style={[
                   styles.statusDot,
@@ -412,68 +445,33 @@ export default function SettingsTab(): React.ReactElement {
                   },
                 ]}
               />
-              <AppText variant="caption" weight="600" color={theme.colors.text}>
+              <AppText variant="caption" weight="600" color={theme.colors.text} style={{ flex: 1 }}>
                 {VI_STRINGS.statusLight[statusLight]} {voiceStatus ? `· ${voiceStatus}` : ''}
               </AppText>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={VI_STRINGS.settings.systemCheckTitle}
+                onPress={runSystemCheck}
+                style={styles.textActionBtn}
+              >
+                <Ionicons name="refresh-outline" size={14} color={theme.colors.primary} />
+                <AppText variant="caption" weight="600" color={theme.colors.primary}>
+                  Kiểm tra
+                </AppText>
+              </Pressable>
             </View>
 
-            <AppText variant="caption" weight="500" color={theme.colors.textMuted}>
+            <AppText variant="caption" weight="500" color={theme.colors.textMuted} style={styles.tipText}>
               {VI_STRINGS.settings.oppoBatteryTip}
             </AppText>
 
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={VI_STRINGS.settings.systemCheckTitle}
-              onPress={runSystemCheck}
-              style={({ pressed }) => [
-                styles.primaryBtn,
-                {
-                  backgroundColor: highContrast ? theme.colors.bg : '#F8FAFC',
-                  borderColor: highContrast ? theme.colors.border : '#E2E8F0',
-                  opacity: pressed ? 0.88 : 1,
-                },
-              ]}
-            >
-              <Ionicons name="refresh-outline" size={18} color={theme.colors.text} />
-              <AppText variant="subhead" weight="600">
-                {VI_STRINGS.settings.systemCheckTitle}
-              </AppText>
-            </Pressable>
-          </View>
-
-          {/* Thẻ miễn trừ trách nhiệm & Onboarding */}
-          <View
-            style={[
-              styles.card,
-              {
-                backgroundColor: highContrast ? theme.colors.surface : '#FFFFFF',
-                borderColor: highContrast ? theme.colors.border : 'rgba(241, 245, 249, 0.9)',
-                marginTop: 4,
-              },
-            ]}
-          >
-            <View style={styles.sectionHeaderRow}>
-              <View style={[styles.sectionIconBadge, { backgroundColor: highContrast ? theme.colors.bg : '#EFF6FF' }]}>
-                <Ionicons name="shield-checkmark-outline" size={18} color={theme.colors.primary} />
-              </View>
-              <AppText variant="subhead" weight="600">
-                {VI_STRINGS.settings.aboutTitle}
-              </AppText>
-            </View>
-
-            <View style={styles.disclaimerBox}>
-              <Ionicons name="warning-outline" size={16} color={theme.colors.danger} />
-              <AppText variant="caption" weight="600" color={theme.colors.danger} style={{ flex: 1 }}>
-                {VI_STRINGS.settings.emergencyDisclaimer}
-              </AppText>
-            </View>
-
+            {/* Mở lại hướng dẫn ban đầu */}
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={VI_STRINGS.settings.openOnboardingButton}
               onPress={() => setOnboardingOpen(true)}
               style={({ pressed }) => [
-                styles.primaryBtn,
+                styles.compactBtn,
                 {
                   backgroundColor: highContrast ? theme.colors.bg : '#F8FAFC',
                   borderColor: highContrast ? theme.colors.border : '#E2E8F0',
@@ -481,77 +479,42 @@ export default function SettingsTab(): React.ReactElement {
                 },
               ]}
             >
-              <Ionicons name="repeat-outline" size={18} color={theme.colors.text} />
-              <AppText variant="subhead" weight="600">
+              <Ionicons name="repeat-outline" size={15} color={theme.colors.text} />
+              <AppText variant="caption" weight="600">
                 {VI_STRINGS.settings.openOnboardingButton}
               </AppText>
             </Pressable>
-          </View>
-        </View>
 
-        {/* Nhóm 5: Lịch sử giao tiếp */}
-        <View style={styles.groupWrapper}>
-          <AppText variant="caption" weight="600" color={theme.colors.textMuted} style={styles.groupLabel}>
-            LỊCH SỬ GIAO TIẾP
-          </AppText>
-
-          <View
-            style={[
-              styles.card,
-              {
-                backgroundColor: highContrast ? theme.colors.surface : '#FFFFFF',
-                borderColor: highContrast ? theme.colors.border : 'rgba(241, 245, 249, 0.9)',
-              },
-            ]}
-          >
-            <View style={styles.sectionHeaderRow}>
-              <View style={[styles.sectionIconBadge, { backgroundColor: highContrast ? theme.colors.bg : '#EFF6FF' }]}>
-                <Ionicons name="time-outline" size={18} color={theme.colors.primary} />
+            {/* Lịch sử giao tiếp */}
+            {history.length > 0 ? (
+              <View style={[styles.historyBox, { borderTopColor: highContrast ? theme.colors.border : '#F1F5F9' }]}>
+                <View style={styles.compactRow}>
+                  <Ionicons name="time-outline" size={15} color={theme.colors.textMuted} />
+                  <AppText variant="caption" weight="600" style={{ flex: 1 }}>
+                    {VI_STRINGS.settings.historyTitle} ({history.length})
+                  </AppText>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={VI_STRINGS.settings.clearHistoryButton}
+                    onPress={clearHistory}
+                    style={styles.textActionBtn}
+                  >
+                    <Ionicons name="trash-outline" size={14} color={theme.colors.danger} />
+                    <AppText variant="caption" weight="600" color={theme.colors.danger}>
+                      Xóa
+                    </AppText>
+                  </Pressable>
+                </View>
               </View>
-              <AppText variant="subhead" weight="600">
-                {VI_STRINGS.settings.historyTitle}
+            ) : null}
+
+            {/* Cảnh báo miễn trừ 113/115 */}
+            <View style={styles.disclaimerBox}>
+              <Ionicons name="warning-outline" size={14} color={theme.colors.danger} />
+              <AppText variant="caption" weight="500" color={theme.colors.danger} style={{ flex: 1 }}>
+                {VI_STRINGS.settings.emergencyDisclaimer}
               </AppText>
             </View>
-
-            {history.length === 0 ? (
-              <AppText variant="caption" weight="500" color={theme.colors.textMuted}>
-                {VI_STRINGS.settings.historyEmpty}
-              </AppText>
-            ) : (
-              history.slice(-10).reverse().map((item) => (
-                <View key={item.id} style={styles.historyItemRow}>
-                  <Ionicons
-                    name={item.speaker === 'other' ? 'chatbubble-outline' : 'person-circle-outline'}
-                    size={16}
-                    color={item.speaker === 'other' ? theme.colors.primary : theme.colors.textMuted}
-                  />
-                  <AppText variant="caption" weight="500" style={{ flex: 1 }}>
-                    {item.text}
-                  </AppText>
-                </View>
-              ))
-            )}
-
-            {history.length > 0 ? (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={VI_STRINGS.settings.clearHistoryButton}
-                onPress={clearHistory}
-                style={({ pressed }) => [
-                  styles.primaryBtn,
-                  {
-                    backgroundColor: highContrast ? theme.colors.bg : '#FEF2F2',
-                    borderColor: highContrast ? theme.colors.danger : '#FECACA',
-                    opacity: pressed ? 0.88 : 1,
-                  },
-                ]}
-              >
-                <Ionicons name="trash-outline" size={18} color={theme.colors.danger} />
-                <AppText variant="subhead" weight="600" color={theme.colors.danger}>
-                  {VI_STRINGS.settings.clearHistoryButton}
-                </AppText>
-              </Pressable>
-            ) : null}
           </View>
         </View>
       </ScrollView>
@@ -567,127 +530,155 @@ export default function SettingsTab(): React.ReactElement {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   scrollContent: {
-    padding: 16,
-    gap: 16,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    gap: 12,
     paddingBottom: 104, // accommodate Floating Island Dock
   },
   groupWrapper: {
-    gap: 8,
+    gap: 6,
   },
   groupLabel: {
     paddingHorizontal: 4,
-    letterSpacing: 0.5,
+    letterSpacing: 0.4,
+    fontSize: 11,
   },
   card: {
     borderWidth: 1,
-    borderRadius: 20,
-    padding: 16,
-    gap: 14,
+    borderRadius: 18,
+    padding: 14,
+    gap: 10,
     shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.04,
-    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 10,
     elevation: 2,
   },
-  sectionHeaderRow: {
+  rowHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
   },
-  sectionIconBadge: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+  subSectionRow: {
+    gap: 6,
+  },
+  compactRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  genderSegmentedRow: {
+    flexDirection: 'row',
+    padding: 3,
+    borderRadius: 14,
+    gap: 4,
+  },
+  genderBtn: {
+    flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    borderRadius: 11,
   },
   segmentedRow: {
     flexDirection: 'row',
-    padding: 4,
-    borderRadius: 16,
+    padding: 3,
+    borderRadius: 14,
     gap: 4,
   },
   segmentBtn: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
-    borderRadius: 12,
+    paddingVertical: 7,
+    borderRadius: 11,
   },
   segmentBtnActiveLight: {
     backgroundColor: '#FFFFFF',
     shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
     elevation: 2,
   },
-  previewBox: {
+  previewRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
     borderWidth: 1,
-    borderRadius: 14,
-    padding: 12,
-    gap: 6,
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
   },
   switchRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 12,
+    paddingTop: 8,
     borderTopWidth: 1,
   },
   switchLabelCol: {
     flex: 1,
     gap: 2,
   },
-  primaryBtn: {
+  compactBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    minHeight: 48,
-    borderRadius: 16,
+    gap: 6,
+    height: 40,
+    borderRadius: 14,
     borderWidth: 1,
-    paddingHorizontal: 16,
-  },
-  input: {
-    borderWidth: 1,
-    borderRadius: 16,
-    padding: 14,
-    minHeight: 88,
-    textAlignVertical: 'top',
-  },
-  systemStatusPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 14,
   },
   emergencyTriggerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 12,
+    gap: 10,
     borderWidth: 1,
-    borderRadius: 16,
-    padding: 12,
+    borderRadius: 14,
+    padding: 10,
+  },
+  compactInput: {
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    minHeight: 56,
+    textAlignVertical: 'top',
   },
   statusDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  textActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  tipText: {
+    fontSize: 11,
+    lineHeight: 16,
+  },
+  historyBox: {
+    paddingTop: 8,
+    borderTopWidth: 1,
+    gap: 6,
   },
   disclaimerBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
     backgroundColor: '#FEF2F2',
-    padding: 10,
-    borderRadius: 12,
-  },
-  historyItemRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 10,
   },
 });

@@ -1,7 +1,10 @@
 import * as Speech from 'expo-speech';
+import { useSystemStore, type VoiceGender } from '../store/systemStatus.ts';
 
 export interface SpeakOptions {
   rate?: number;
+  pitch?: number;
+  gender?: VoiceGender;
   onStart?: () => void;
   onDone?: () => void;
   onError?: (err: unknown) => void;
@@ -15,10 +18,14 @@ export function speakVietnamese(text: string, options: SpeakOptions = {}): void 
   if (!trimmed) return;
 
   try {
+    const gender = options.gender ?? useSystemStore.getState().voiceGender;
+    const resolvedPitch = options.pitch ?? (gender === 'male' ? 0.82 : 1.15);
+
     Speech.stop();
     Speech.speak(trimmed, {
       language: 'vi-VN',
       rate: options.rate ?? 1.0,
+      pitch: resolvedPitch,
       onStart: options.onStart,
       onDone: options.onDone,
       onError: options.onError,
