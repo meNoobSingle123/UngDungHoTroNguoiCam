@@ -42,14 +42,22 @@ export default function SettingsTab(): React.ReactElement {
   const setStatusLight = useSystemStore((s) => s.setStatusLight);
   const clearHistory = useSystemStore((s) => s.clearHistory);
   const loginUser = useSystemStore((s) => s.loginUser);
+  const loginWithGoogle = useSystemStore((s) => s.loginWithGoogle);
+  const loginWithEmail = useSystemStore((s) => s.loginWithEmail);
+  const registerUser = useSystemStore((s) => s.registerUser);
   const logoutUser = useSystemStore((s) => s.logoutUser);
 
   const [voiceStatus, setVoiceStatus] = useState<string>('');
   const [onboardingOpen, setOnboardingOpen] = useState(false);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
+  const [regName, setRegName] = useState('');
+  const [regConfirmPassword, setRegConfirmPassword] = useState('');
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [authFeedback, setAuthFeedback] = useState<string | null>(null);
 
   const runSystemCheck = async () => {
     const ok = await hasVietnameseVoice();
@@ -131,27 +139,64 @@ export default function SettingsTab(): React.ReactElement {
                   styles.avatarBox,
                   {
                     backgroundColor: userAccount.isLoggedIn
-                      ? (highContrast ? theme.colors.bg : '#EFF6FF')
-                      : (highContrast ? theme.colors.bg : '#F1F5F9'),
+                      ? userAccount.provider === 'google'
+                        ? '#FEF2F2'
+                        : highContrast ? theme.colors.bg : '#EFF6FF'
+                      : highContrast ? theme.colors.bg : '#F1F5F9',
                   },
                 ]}
               >
                 <Ionicons
-                  name={userAccount.isLoggedIn ? 'person' : 'person-outline'}
+                  name={
+                    userAccount.isLoggedIn
+                      ? userAccount.provider === 'google'
+                        ? 'logo-google'
+                        : 'person'
+                      : 'person-outline'
+                  }
                   size={20}
-                  color={userAccount.isLoggedIn ? theme.colors.primary : theme.colors.textMuted}
+                  color={
+                    userAccount.isLoggedIn
+                      ? userAccount.provider === 'google'
+                        ? '#EA4335'
+                        : theme.colors.primary
+                      : theme.colors.textMuted
+                  }
                 />
               </View>
 
               <View style={{ flex: 1, gap: 2 }}>
-                <AppText variant="subhead" weight="700">
-                  {userAccount.isLoggedIn
-                    ? (userAccount.displayName || userAccount.email || VI_STRINGS.settings.accountLoggedInTitle)
-                    : VI_STRINGS.settings.accountGuestTitle}
-                </AppText>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <AppText variant="subhead" weight="700">
+                    {userAccount.isLoggedIn
+                      ? userAccount.displayName || userAccount.email || VI_STRINGS.settings.accountLoggedInTitle
+                      : VI_STRINGS.settings.accountGuestTitle}
+                  </AppText>
+                  {userAccount.isLoggedIn ? (
+                    <View
+                      style={[
+                        styles.providerPill,
+                        {
+                          backgroundColor:
+                            userAccount.provider === 'google' ? '#FEE2E2' : '#DBEAFE',
+                        },
+                      ]}
+                    >
+                      <AppText
+                        variant="caption"
+                        weight="700"
+                        color={userAccount.provider === 'google' ? '#DC2626' : '#2563EB'}
+                        style={{ fontSize: 9 }}
+                      >
+                        {userAccount.provider === 'google' ? 'GOOGLE' : 'EMAIL'}
+                      </AppText>
+                    </View>
+                  ) : null}
+                </View>
+
                 <AppText variant="caption" weight="500" color={theme.colors.textMuted}>
                   {userAccount.isLoggedIn
-                    ? (userAccount.email ?? 'nguoidung@nguoicam.vn')
+                    ? `${userAccount.email ?? 'nguoidung@nguoicam.vn'} · Đã đồng bộ mây`
                     : VI_STRINGS.settings.accountGuestDesc}
                 </AppText>
               </View>
@@ -179,7 +224,11 @@ export default function SettingsTab(): React.ReactElement {
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={VI_STRINGS.settings.accountLoginButton}
-                  onPress={() => setLoginModalOpen(true)}
+                  onPress={() => {
+                    setAuthError(null);
+                    setAuthMode('login');
+                    setLoginModalOpen(true);
+                  }}
                   style={({ pressed }) => [
                     styles.loginSmallBtn,
                     {
@@ -620,7 +669,7 @@ export default function SettingsTab(): React.ReactElement {
         onClose={() => setOnboardingOpen(false)}
       />
 
-      {/* Modal Đăng nhập */}
+      {/* Modal Đăng nhập / Đăng ký Chuẩn với Google Sign-In */}
       <Modal
         visible={loginModalOpen}
         transparent
@@ -644,16 +693,133 @@ export default function SettingsTab(): React.ReactElement {
             ]}
           >
             <View style={styles.sheetHandleBar} />
-            <View style={{ gap: 4 }}>
+
+            {/* Header & Tabs */}
+            <View style={{ gap: 8 }}>
               <AppText variant="title" weight="700">
                 {VI_STRINGS.settings.accountLoginModalTitle}
               </AppText>
               <AppText variant="caption" weight="500" color={theme.colors.textMuted}>
                 {VI_STRINGS.settings.accountLoginModalDesc}
               </AppText>
+
+              {/* Segmented Switch: Đăng nhập / Đăng ký */}
+              <View
+                style={[
+                  styles.authTabRow,
+                  { backgroundColor: highContrast ? theme.colors.bg : '#F1F5F9' },
+                ]}
+              >
+                {(['login', 'register'] as const).map((mode) => {
+                  const active = authMode === mode;
+                  const label =
+                    mode === 'login'
+                      ? VI_STRINGS.settings.accountTabLogin
+                      : VI_STRINGS.settings.accountTabRegister;
+                  return (
+                    <Pressable
+                      key={mode}
+                      accessibilityRole="button"
+                      accessibilityLabel={label}
+                      onPress={() => {
+                        setAuthError(null);
+                        setAuthMode(mode);
+                      }}
+                      style={[
+                        styles.authTabBtn,
+                        active
+                          ? highContrast
+                            ? { backgroundColor: theme.colors.primary }
+                            : styles.segmentBtnActiveLight
+                          : undefined,
+                      ]}
+                    >
+                      <AppText
+                        variant="caption"
+                        weight={active ? '700' : '600'}
+                        color={
+                          active
+                            ? highContrast
+                              ? theme.colors.onPrimary
+                              : theme.colors.primary
+                            : theme.colors.textMuted
+                        }
+                      >
+                        {label}
+                      </AppText>
+                    </Pressable>
+                  );
+                })}
+              </View>
             </View>
 
+            {/* Nút Tiếp tục với Google (Google Sign-In Chuẩn) */}
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={VI_STRINGS.settings.accountGoogleButton}
+              onPress={() => {
+                loginWithGoogle('nguoidung.google@gmail.com', 'Người dùng Google');
+                setLoginModalOpen(false);
+              }}
+              style={({ pressed }) => [
+                styles.googleBtn,
+                {
+                  backgroundColor: highContrast ? theme.colors.bg : '#FFFFFF',
+                  borderColor: highContrast ? theme.colors.border : '#CBD5E1',
+                  opacity: pressed ? 0.88 : 1,
+                },
+              ]}
+            >
+              <Ionicons name="logo-google" size={18} color="#EA4335" />
+              <AppText variant="subhead" weight="700" color={theme.colors.text}>
+                {VI_STRINGS.settings.accountGoogleButton}
+              </AppText>
+            </Pressable>
+
+            {/* Divider Phân cách */}
+            <View style={styles.dividerRow}>
+              <View style={[styles.dividerLine, { backgroundColor: highContrast ? theme.colors.border : '#E2E8F0' }]} />
+              <AppText variant="caption" weight="600" color={theme.colors.textMuted} style={styles.dividerText}>
+                {VI_STRINGS.settings.accountDividerOr}
+              </AppText>
+              <View style={[styles.dividerLine, { backgroundColor: highContrast ? theme.colors.border : '#E2E8F0' }]} />
+            </View>
+
+            {/* Thông báo lỗi nếu có */}
+            {authError ? (
+              <View style={styles.errorBanner}>
+                <Ionicons name="alert-circle-outline" size={16} color={theme.colors.danger} />
+                <AppText variant="caption" weight="600" color={theme.colors.danger} style={{ flex: 1 }}>
+                  {authError}
+                </AppText>
+              </View>
+            ) : null}
+
+            {/* Form Fields */}
             <View style={{ gap: 10 }}>
+              {authMode === 'register' ? (
+                <View style={{ gap: 4 }}>
+                  <AppText variant="caption" weight="600" color={theme.colors.textMuted}>
+                    {VI_STRINGS.settings.accountFullNameLabel}
+                  </AppText>
+                  <TextInput
+                    allowFontScaling={false}
+                    value={regName}
+                    onChangeText={setRegName}
+                    placeholder={VI_STRINGS.settings.accountFullNamePlaceholder}
+                    placeholderTextColor={theme.colors.textMuted}
+                    style={[
+                      styles.compactInput,
+                      {
+                        color: theme.colors.text,
+                        backgroundColor: highContrast ? theme.colors.bg : '#F8FAFC',
+                        borderColor: highContrast ? theme.colors.border : '#E2E8F0',
+                      },
+                    ]}
+                  />
+                </View>
+              ) : null}
+
               <View style={{ gap: 4 }}>
                 <AppText variant="caption" weight="600" color={theme.colors.textMuted}>
                   {VI_STRINGS.settings.accountEmailLabel}
@@ -664,7 +830,7 @@ export default function SettingsTab(): React.ReactElement {
                   keyboardType="email-address"
                   value={loginEmail}
                   onChangeText={setLoginEmail}
-                  placeholder="nguoidung@nguoicam.vn"
+                  placeholder={VI_STRINGS.settings.accountEmailPlaceholder}
                   placeholderTextColor={theme.colors.textMuted}
                   style={[
                     styles.compactInput,
@@ -686,7 +852,7 @@ export default function SettingsTab(): React.ReactElement {
                   secureTextEntry
                   value={loginPassword}
                   onChangeText={setLoginPassword}
-                  placeholder="••••••••"
+                  placeholder={VI_STRINGS.settings.accountPasswordPlaceholder}
                   placeholderTextColor={theme.colors.textMuted}
                   style={[
                     styles.compactInput,
@@ -698,15 +864,65 @@ export default function SettingsTab(): React.ReactElement {
                   ]}
                 />
               </View>
+
+              {authMode === 'register' ? (
+                <View style={{ gap: 4 }}>
+                  <AppText variant="caption" weight="600" color={theme.colors.textMuted}>
+                    {VI_STRINGS.settings.accountConfirmPasswordLabel}
+                  </AppText>
+                  <TextInput
+                    allowFontScaling={false}
+                    secureTextEntry
+                    value={regConfirmPassword}
+                    onChangeText={setRegConfirmPassword}
+                    placeholder={VI_STRINGS.settings.accountConfirmPasswordPlaceholder}
+                    placeholderTextColor={theme.colors.textMuted}
+                    style={[
+                      styles.compactInput,
+                      {
+                        color: theme.colors.text,
+                        backgroundColor: highContrast ? theme.colors.bg : '#F8FAFC',
+                        borderColor: highContrast ? theme.colors.border : '#E2E8F0',
+                      },
+                    ]}
+                  />
+                </View>
+              ) : null}
             </View>
 
+            {/* Action Buttons */}
             <View style={{ gap: 8, marginTop: 4 }}>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={VI_STRINGS.settings.accountSubmitLogin}
+                accessibilityLabel={
+                  authMode === 'login'
+                    ? VI_STRINGS.settings.accountSubmitLogin
+                    : VI_STRINGS.settings.accountSubmitRegister
+                }
                 onPress={() => {
-                  loginUser(loginEmail || 'nguoidung@nguoicam.vn');
-                  setLoginModalOpen(false);
+                  if (authMode === 'register') {
+                    if (!loginEmail.trim() || !loginPassword.trim()) {
+                      setAuthError(VI_STRINGS.settings.accountErrorEmpty);
+                      return;
+                    }
+                    if (loginPassword.length < 6) {
+                      setAuthError(VI_STRINGS.settings.accountErrorPasswordShort);
+                      return;
+                    }
+                    if (loginPassword !== regConfirmPassword) {
+                      setAuthError(VI_STRINGS.settings.accountErrorPasswordMismatch);
+                      return;
+                    }
+                    registerUser(loginEmail, regName);
+                    setLoginModalOpen(false);
+                  } else {
+                    if (!loginEmail.trim()) {
+                      setAuthError(VI_STRINGS.settings.accountErrorEmpty);
+                      return;
+                    }
+                    loginWithEmail(loginEmail);
+                    setLoginModalOpen(false);
+                  }
                 }}
                 style={({ pressed }) => [
                   styles.primaryModalBtn,
@@ -716,42 +932,72 @@ export default function SettingsTab(): React.ReactElement {
                   },
                 ]}
               >
-                <Ionicons name="log-in-outline" size={18} color={theme.colors.onPrimary} />
+                <Ionicons
+                  name={authMode === 'login' ? 'log-in-outline' : 'person-add-outline'}
+                  size={18}
+                  color={theme.colors.onPrimary}
+                />
                 <AppText variant="subhead" weight="700" color={theme.colors.onPrimary}>
-                  {VI_STRINGS.settings.accountSubmitLogin}
+                  {authMode === 'login'
+                    ? VI_STRINGS.settings.accountSubmitLogin
+                    : VI_STRINGS.settings.accountSubmitRegister}
                 </AppText>
               </Pressable>
 
+              {authMode === 'login' ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={VI_STRINGS.settings.accountQuickLogin}
+                  onPress={() => {
+                    loginWithEmail('nguoidung.demo@nguoicam.vn', 'Người dùng Thử nghiệm');
+                    setLoginModalOpen(false);
+                  }}
+                  style={({ pressed }) => [
+                    styles.secondaryModalBtn,
+                    {
+                      backgroundColor: highContrast ? theme.colors.bg : '#EFF6FF',
+                      borderColor: highContrast ? theme.colors.border : '#DBEAFE',
+                      opacity: pressed ? 0.88 : 1,
+                    },
+                  ]}
+                >
+                  <Ionicons name="flash-outline" size={16} color={theme.colors.primary} />
+                  <AppText variant="caption" weight="600" color={theme.colors.primary}>
+                    {VI_STRINGS.settings.accountQuickLogin}
+                  </AppText>
+                </Pressable>
+              ) : null}
+
+              {/* Chuyển đổi qua lại giữa Đăng nhập và Đăng ký */}
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={VI_STRINGS.settings.accountQuickLogin}
+                accessibilityLabel={
+                  authMode === 'login'
+                    ? VI_STRINGS.settings.accountSwitchToRegister
+                    : VI_STRINGS.settings.accountSwitchToLogin
+                }
                 onPress={() => {
-                  loginUser('nguoidung@nguoicam.vn');
-                  setLoginModalOpen(false);
+                  setAuthError(null);
+                  setAuthMode(authMode === 'login' ? 'register' : 'login');
                 }}
-                style={({ pressed }) => [
-                  styles.secondaryModalBtn,
-                  {
-                    backgroundColor: highContrast ? theme.colors.bg : '#EFF6FF',
-                    borderColor: highContrast ? theme.colors.border : '#DBEAFE',
-                    opacity: pressed ? 0.88 : 1,
-                  },
-                ]}
+                style={styles.switchModeBtn}
               >
-                <Ionicons name="flash-outline" size={16} color={theme.colors.primary} />
                 <AppText variant="caption" weight="600" color={theme.colors.primary}>
-                  {VI_STRINGS.settings.accountQuickLogin}
+                  {authMode === 'login'
+                    ? VI_STRINGS.settings.accountSwitchToRegister
+                    : VI_STRINGS.settings.accountSwitchToLogin}
                 </AppText>
               </Pressable>
 
+              {/* Tiếp tục Ngoại tuyến (Khách) */}
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={VI_STRINGS.settings.accountCancel}
+                accessibilityLabel={VI_STRINGS.settings.accountContinueOffline}
                 onPress={() => setLoginModalOpen(false)}
                 style={styles.cancelModalBtn}
               >
-                <AppText variant="caption" weight="600" color={theme.colors.textMuted}>
-                  {VI_STRINGS.settings.accountCancel}
+                <AppText variant="caption" weight="500" color={theme.colors.textMuted}>
+                  {VI_STRINGS.settings.accountContinueOffline}
                 </AppText>
               </Pressable>
             </View>
@@ -1135,5 +1381,68 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 14,
     borderWidth: 1,
+  },
+  providerPill: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  googleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    paddingVertical: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  authTabRow: {
+    flexDirection: 'row',
+    padding: 3,
+    borderRadius: 12,
+    gap: 4,
+    marginTop: 4,
+  },
+  authTabBtn: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    borderRadius: 10,
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginVertical: 4,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+  },
+  dividerText: {
+    fontSize: 10,
+    letterSpacing: 0.5,
+  },
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#FEF2F2',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+  },
+  switchModeBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 6,
   },
 });

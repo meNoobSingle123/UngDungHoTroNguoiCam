@@ -13,10 +13,14 @@ export type PermissionCheckState =
   | 'denied'
   | 'never_ask_again';
 
+export type AuthProviderType = 'google' | 'password' | 'guest';
+
 export interface UserAccountInfo {
   isLoggedIn: boolean;
   email?: string;
   displayName?: string;
+  provider?: AuthProviderType;
+  photoUrl?: string;
   syncStatus: 'offline' | 'synced' | 'pending';
 }
 
@@ -85,6 +89,9 @@ export interface SystemStoreState {
   setOnboardingStatus: (status: OnboardingStatus) => void;
   setPermissionState: (state: PermissionCheckState) => void;
   loginUser: (email: string) => void;
+  loginWithGoogle: (email?: string, name?: string) => void;
+  loginWithEmail: (email: string, displayName?: string) => void;
+  registerUser: (email: string, displayName: string) => void;
   logoutUser: () => void;
   applyPersistedSettings: (snapshot: PersistedSettingsSnapshot) => void;
   addHistoryEntry: (speaker: 'me' | 'other', text: string, tMs?: number) => void;
@@ -152,6 +159,47 @@ export const useSystemStore = create<SystemStoreState>((set, get) => ({
         isLoggedIn: true,
         email: cleanEmail,
         displayName: cleanEmail.split('@')[0],
+        provider: 'password',
+        syncStatus: 'synced',
+      },
+    });
+    notifyPersist(get());
+  },
+  loginWithGoogle: (email = 'nguoidung.google@gmail.com', name = 'Người dùng Google') => {
+    set({
+      userAccount: {
+        isLoggedIn: true,
+        email,
+        displayName: name,
+        provider: 'google',
+        syncStatus: 'synced',
+      },
+    });
+    notifyPersist(get());
+  },
+  loginWithEmail: (email: string, displayName?: string) => {
+    const cleanEmail = email.trim() || 'nguoidung@nguoicam.vn';
+    const cleanName = displayName?.trim() || cleanEmail.split('@')[0];
+    set({
+      userAccount: {
+        isLoggedIn: true,
+        email: cleanEmail,
+        displayName: cleanName,
+        provider: 'password',
+        syncStatus: 'synced',
+      },
+    });
+    notifyPersist(get());
+  },
+  registerUser: (email: string, displayName: string) => {
+    const cleanEmail = email.trim();
+    const cleanName = displayName.trim() || cleanEmail.split('@')[0];
+    set({
+      userAccount: {
+        isLoggedIn: true,
+        email: cleanEmail,
+        displayName: cleanName,
+        provider: 'password',
         syncStatus: 'synced',
       },
     });
@@ -161,6 +209,7 @@ export const useSystemStore = create<SystemStoreState>((set, get) => ({
     set({
       userAccount: {
         isLoggedIn: false,
+        provider: 'guest',
         syncStatus: 'offline',
       },
     });
