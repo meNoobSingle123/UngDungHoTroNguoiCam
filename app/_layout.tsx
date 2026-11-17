@@ -10,6 +10,8 @@ import { hasVietnameseVoice } from '../src/core/tts/speechService.ts';
 import { OnboardingModal } from '../src/features/onboarding/OnboardingModal.tsx';
 import { SosOverlay } from '../src/features/sos/SosOverlay.tsx';
 
+declare const __DEV__: boolean | undefined;
+
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 function RootShell(): React.ReactElement {
@@ -18,6 +20,15 @@ function RootShell(): React.ReactElement {
   const setStatusLight = useSystemStore((s) => s.setStatusLight);
   const onboardingStatus = useSystemStore((s) => s.onboardingStatus);
   const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    if (typeof __DEV__ !== 'undefined' && __DEV__) {
+      try {
+        const DevMenu = require('expo-dev-menu');
+        DevMenu.setToolsButtonVisible?.(false);
+      } catch {}
+    }
+  }, []);
 
   useEffect(() => {
     Promise.all([
