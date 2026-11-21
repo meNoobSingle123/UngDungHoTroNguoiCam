@@ -10,6 +10,8 @@ import {
   buildSentence,
   type SentenceModifier,
 } from '../../packages/sentence-builder/src/index.ts';
+import { VI_STRINGS } from '../../src/core/i18n/vi.ts';
+import { useSystemStore } from '../../src/core/store/systemStatus.ts';
 
 const ROOT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
@@ -145,4 +147,138 @@ describe('Section 7.3 sentence-templates & @sign/sentence-builder (U-08)', () =>
     assert.deepEqual(buildSentence(['xin_chao'], 'none'), { text: 'Xin chào.' });
   });
 });
+
+describe('Honesty & Play Store compliance invariants (Rules 11, 12, 14, 15)', () => {
+  it('enforces accountEnabled === false, guest offline mode, and guards mock auth actions', () => {
+    // Reset store to default
+    useSystemStore.setState({
+      accountEnabled: false,
+      userAccount: {
+        isLoggedIn: false,
+        provider: 'guest',
+        syncStatus: 'offline',
+      },
+    });
+
+    const state = useSystemStore.getState();
+    assert.equal(state.accountEnabled, false, 'Play release #1 must have accountEnabled=false');
+    assert.equal(state.userAccount.isLoggedIn, false);
+    assert.equal(state.userAccount.provider, 'guest');
+    assert.equal(state.userAccount.syncStatus, 'offline');
+
+    // Attempting fake login when accountEnabled=false should be completely guarded
+    state.loginUser('test@example.com');
+    assert.equal(useSystemStore.getState().userAccount.isLoggedIn, false);
+
+    state.loginWithGoogle();
+    assert.equal(useSystemStore.getState().userAccount.isLoggedIn, false);
+
+    state.loginWithEmail('test@example.com');
+    assert.equal(useSystemStore.getState().userAccount.isLoggedIn, false);
+
+    state.registerUser('test@example.com', 'Test User');
+    assert.equal(useSystemStore.getState().userAccount.isLoggedIn, false);
+
+    // applyPersistedSettings with loggedIn account must stay guest offline when accountEnabled=false
+    state.applyPersistedSettings({
+      userAccount: {
+        isLoggedIn: true,
+        email: 'leaked@example.com',
+        provider: 'password',
+        syncStatus: 'synced',
+      },
+    });
+    assert.equal(useSystemStore.getState().userAccount.isLoggedIn, false);
+    assert.equal(useSystemStore.getState().userAccount.provider, 'guest');
+  });
+
+  it('enforces dictionary honesty: removes unverified "chuẩn TP.HCM" claims and uses reference prototype', () => {
+    // Dictionary strings
+    assert.ok(
+      !VI_STRINGS.dictionary.title.includes('chuẩn TP.HCM'),
+      'Dictionary title must not claim unverified "chuẩn TP.HCM"'
+    );
+    assert.ok(
+      VI_STRINGS.dictionary.title.includes('Nguyên mẫu tham chiếu'),
+      'Dictionary title must state "Nguyên mẫu tham chiếu"'
+    );
+    assert.equal(
+      VI_STRINGS.dictionary.sectionTitle,
+      'NGUYÊN MẪU THAM CHIẾU',
+      'Dictionary section title must state NGUYÊN MẪU THAM CHIẾU'
+    );
+    assert.ok(
+      !VI_STRINGS.dictionary.handPoseFallback.includes('chuẩn TP.HCM'),
+      'Hand pose fallback must not claim unverified "chuẩn TP.HCM"'
+    );
+    assert.equal(
+      VI_STRINGS.dictionary.handPoseFallback,
+      'Chưa có mô tả (đang đối chiếu Sổ nguồn).'
+    );
+
+    // Verify app/(tabs)/dictionary.tsx does not contain hardcoded "KÝ HIỆU TP.HCM"
+    const dictCode = fs.readFileSync(path.join(ROOT_DIR, 'app/(tabs)/dictionary.tsx'), 'utf8');
+    assert.ok(
+      !dictCode.includes('KÝ HIỆU TP.HCM'),
+      'app/(tabs)/dictionary.tsx must not hardcode "KÝ HIỆU TP.HCM"'
+    );
+
+    // Verify settings tab does not expose fake password storage
+    const settingsCode = fs.readFileSync(path.join(ROOT_DIR, 'app/(tabs)/settings.tsx'), 'utf8');
+    assert.ok(
+      !settingsCode.includes('AsyncStorage.setItem("password"'),
+      'Settings must never store password on disk'
+    );
+    assert.ok(
+      !settingsCode.includes('sqlite.execAsync("INSERT INTO passwords"'),
+      'Settings must never store password in SQLite'
+    );
+  });
+
+  it('provides comprehensive dictionary details for all 20 words for sign learners', async () => {
+    const { WORD_DETAILS_MAP } = await import('../../src/features/dictionary/dictionaryDetails.ts');
+
+    // All 20 words must be present in WORD_DETAILS_MAP
+    assert.equal(Object.keys(WORD_DETAILS_MAP).length, 20);
+    for (const wordId of WORD_IDS) {
+      const detail = WORD_DETAILS_MAP[wordId];
+      assert.ok(detail, `Missing detail for word ${wordId}`);
+      assert.equal(detail.id, wordId);
+      assert.ok(detail.vi.length > 0, `Word ${wordId} has empty vi text`);
+      assert.ok(detail.group.length > 0, `Word ${wordId} has empty group`);
+
+      // 4 Core Sign Language Phonological Components
+      assert.ok(detail.handshape.length > 10, `Word ${wordId} missing detailed handshape`);
+      assert.ok(detail.location.length > 5, `Word ${wordId} missing detailed location`);
+      assert.ok(detail.movement.length > 5, `Word ${wordId} missing detailed movement`);
+      assert.ok(detail.facial.length > 5, `Word ${wordId} missing detailed facial marker`);
+
+      // Practical example sentence and learner notes
+      assert.ok(detail.exampleSentence.length > 5, `Word ${wordId} missing example sentence`);
+      assert.ok(detail.notes.length > 5, `Word ${wordId} missing learner notes`);
+
+      // Rule 12 honesty verification: must not claim unverified official status
+      assert.ok(
+        !detail.handshape.includes('chuẩn TP.HCM') &&
+          !detail.notes.includes('chuẩn TP.HCM'),
+        `Word ${wordId} must not contain unverified TP.HCM claim`
+      );
+    }
+
+    // Verify UI strings for dictionary learning layout
+    assert.ok(VI_STRINGS.dictionary.detailTitle.length > 0);
+    assert.ok(VI_STRINGS.dictionary.backToList.length > 0);
+    assert.ok(VI_STRINGS.dictionary.videoSectionTitle.length > 0);
+    assert.ok(VI_STRINGS.dictionary.componentsTitle.length > 0);
+    assert.ok(VI_STRINGS.dictionary.handshapeLabel.length > 0);
+    assert.ok(VI_STRINGS.dictionary.locationLabel.length > 0);
+    assert.ok(VI_STRINGS.dictionary.movementLabel.length > 0);
+    assert.ok(VI_STRINGS.dictionary.facialLabel.length > 0);
+    assert.ok(VI_STRINGS.dictionary.exampleTitle.length > 0);
+    assert.ok(VI_STRINGS.dictionary.saveToCardsButton.length > 0);
+    assert.ok(VI_STRINGS.dictionary.saveToCardsSuccess.length > 0);
+  });
+});
+
+
 

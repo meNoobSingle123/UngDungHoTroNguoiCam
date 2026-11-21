@@ -13,9 +13,9 @@ export const VI_STRINGS = {
   },
   onboarding: {
     stepLabel: 'Bước',
-    step1Title: 'Chào mừng đến Giao tiếp Ký hiệu',
+    step1Title: 'Chào mừng đến HandTalk',
     step1Body:
-      'Ứng dụng hỗ trợ giao tiếp 2 chiều hoàn toàn offline: nhận diện ký hiệu tay TP.HCM, thẻ câu nhanh, từ điển và SOS khẩn cấp.',
+      'HandTalk hỗ trợ giao tiếp 2 chiều hoàn toàn offline: nhận diện ký hiệu tay (nguyên mẫu tham chiếu), thẻ câu nhanh, từ điển và SOS khẩn cấp.',
     step2Title: 'Quyền Camera & Micro',
     step2Body:
       'Camera dùng để nhận diện ký hiệu (chỉ xử lý trong bộ nhớ, không ghi đĩa hay gửi đi). Micro dùng khi nghe câu người đối diện.',
@@ -116,16 +116,33 @@ export const VI_STRINGS = {
     limitReached: 'Chỉ ghim tối đa 8 thẻ lên Tab Giao tiếp.',
   },
   dictionary: {
-    title: 'Từ điển ký hiệu TP.HCM',
+    title: 'Từ điển ký hiệu (Nguyên mẫu tham chiếu)',
+    sectionTitle: 'NGUYÊN MẪU THAM CHIẾU',
     searchPlaceholder: 'Tìm từ trong 20 ký hiệu...',
     prototypeNotice: 'Nguyên mẫu tham chiếu, chưa được người Điếc thẩm định',
-    practiceButton: 'Tập thử',
+    practiceButton: 'Tập thử (Sắp có)',
     stopPracticeButton: 'Dừng tập thử',
     speakWordButton: 'Nghe từ',
     practiceMatched: 'Chính xác! Đã khóa đúng từ mục tiêu.',
     practiceTargetPrefix: 'Mục tiêu:',
-    handPoseFallback:
-      'Mô tả tay & mặt đối chiếu Sổ nguồn TP.HCM (chưa có video/hình minh họa).',
+    handPoseFallback: 'Chưa có mô tả (đang đối chiếu Sổ nguồn).',
+    detailTitle: 'Chi tiết ký hiệu',
+    backToList: 'Danh sách',
+    videoSectionTitle: 'MINH HỌA CỬ CHỈ THỊ GIÁC',
+    videoFrontView: 'Góc nhìn chính diện',
+    speedNormal: '1.0x Chuẩn',
+    speedSlow: '0.5x Chậm',
+    replayButton: 'Phát lại',
+    componentsTitle: '4 THÀNH PHẦN KÝ HIỆU (CHO NGƯỜI HỌC)',
+    handshapeLabel: 'Hình dáng bàn tay',
+    locationLabel: 'Vị trí thực hiện',
+    movementLabel: 'Chuyển động & Hướng',
+    facialLabel: 'Nét mặt & Khẩu hình',
+    exampleTitle: 'CÂU VÍ DỤ THỰC TẾ',
+    listenExample: 'Nghe câu',
+    saveToCardsButton: 'Lưu vào Thẻ câu',
+    saveToCardsSuccess: 'Đã thêm từ này vào danh sách Thẻ cá nhân!',
+    learnerNotesTitle: 'GHI CHÚ HỌC TẬP',
   },
   settings: {
     onboardingReminder:
@@ -151,14 +168,20 @@ export const VI_STRINGS = {
     historyEmpty: 'Chưa có lịch sử giao tiếp.',
     clearHistoryButton: 'Xóa lịch sử',
     systemCheckTitle: 'Kiểm tra hệ thống',
+    batteryOptimizationTip:
+      'Mẹo hệ thống: Cài đặt máy > Pin > Tắt tối ưu hóa pin để ứng dụng hoạt động ổn định nhất.',
     oppoBatteryTip:
-      'Trên OPPO A78: Cài đặt > Pin > Tối ưu hóa pin > Không tối ưu cho ứng dụng này.',
-    aboutTitle: 'Về ứng dụng',
+      'Mẹo hệ thống: Cài đặt máy > Pin > Tắt tối ưu hóa pin để ứng dụng hoạt động ổn định nhất.',
+    aboutTitle: 'Về HandTalk',
     emergencyDisclaimer:
       'Lưu ý: Ứng dụng hỗ trợ giao tiếp và không thay thế gọi 113/115.',
     accountTitle: 'Tài khoản & Đồng bộ',
-    accountGuestTitle: 'Chế độ Khách (Ngoại tuyến)',
-    accountGuestDesc: 'Dữ liệu lưu an toàn trên máy, hoạt động không cần mạng',
+    accountGuestTitle: 'Chế độ Ngoại tuyến (Khách)',
+    accountGuestDesc:
+      'Dữ liệu lưu an toàn trên máy, hoạt động hoàn toàn không cần mạng.',
+    accountOfflineBadge: 'Ngoại tuyến',
+    accountComingSoonNotice:
+      'Tính năng đăng nhập & đồng bộ mây sẽ ra mắt khi kết nối máy chủ chính thức.',
     accountLoggedInTitle: 'Đã kết nối tài khoản',
     accountLoginButton: 'Đăng nhập / Đăng ký',
     accountLogoutButton: 'Đăng xuất',

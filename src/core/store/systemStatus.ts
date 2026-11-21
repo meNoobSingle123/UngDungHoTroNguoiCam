@@ -38,6 +38,7 @@ export interface PersistedSettingsSnapshot {
   voiceGender?: VoiceGender;
   emergencyInfo?: string;
   onboardingStatus?: OnboardingStatus;
+  accountEnabled?: boolean;
   userAccount?: UserAccountInfo;
 }
 
@@ -58,6 +59,7 @@ function notifyPersist(state: SystemStoreState): void {
     voiceGender: state.voiceGender,
     emergencyInfo: state.emergencyInfo,
     onboardingStatus: state.onboardingStatus,
+    accountEnabled: state.accountEnabled,
     userAccount: state.userAccount,
   });
 }
@@ -74,6 +76,7 @@ export interface SystemStoreState {
   emergencyInfo: string;
   onboardingStatus: OnboardingStatus;
   permissionState: PermissionCheckState;
+  accountEnabled: boolean;
   userAccount: UserAccountInfo;
   history: ConversationEntry[];
 
@@ -88,6 +91,7 @@ export interface SystemStoreState {
   setEmergencyInfo: (text: string) => void;
   setOnboardingStatus: (status: OnboardingStatus) => void;
   setPermissionState: (state: PermissionCheckState) => void;
+  setAccountEnabled: (enabled: boolean) => void;
   loginUser: (email: string) => void;
   loginWithGoogle: (email?: string, name?: string) => void;
   loginWithEmail: (email: string, displayName?: string) => void;
@@ -110,8 +114,10 @@ export const useSystemStore = create<SystemStoreState>((set, get) => ({
   emergencyInfo: '',
   onboardingStatus: 'pending',
   permissionState: 'unknown',
+  accountEnabled: false,
   userAccount: {
     isLoggedIn: false,
+    provider: 'guest',
     syncStatus: 'offline',
   },
   history: [],
@@ -152,8 +158,18 @@ export const useSystemStore = create<SystemStoreState>((set, get) => ({
     notifyPersist(get());
   },
   setPermissionState: (permissionState) => set({ permissionState }),
+  setAccountEnabled: (accountEnabled) => {
+    set({
+      accountEnabled,
+      userAccount: accountEnabled
+        ? get().userAccount
+        : { isLoggedIn: false, provider: 'guest', syncStatus: 'offline' },
+    });
+    notifyPersist(get());
+  },
   loginUser: (email: string) => {
-    const cleanEmail = email.trim() || 'nguoidung@nguoicam.vn';
+    if (!get().accountEnabled) return;
+    const cleanEmail = email.trim() || 'nguoidung@example.com';
     set({
       userAccount: {
         isLoggedIn: true,
@@ -166,6 +182,7 @@ export const useSystemStore = create<SystemStoreState>((set, get) => ({
     notifyPersist(get());
   },
   loginWithGoogle: (email = 'nguoidung.google@gmail.com', name = 'Người dùng Google') => {
+    if (!get().accountEnabled) return;
     set({
       userAccount: {
         isLoggedIn: true,
@@ -178,7 +195,8 @@ export const useSystemStore = create<SystemStoreState>((set, get) => ({
     notifyPersist(get());
   },
   loginWithEmail: (email: string, displayName?: string) => {
-    const cleanEmail = email.trim() || 'nguoidung@nguoicam.vn';
+    if (!get().accountEnabled) return;
+    const cleanEmail = email.trim() || 'nguoidung@example.com';
     const cleanName = displayName?.trim() || cleanEmail.split('@')[0];
     set({
       userAccount: {
@@ -192,6 +210,7 @@ export const useSystemStore = create<SystemStoreState>((set, get) => ({
     notifyPersist(get());
   },
   registerUser: (email: string, displayName: string) => {
+    if (!get().accountEnabled) return;
     const cleanEmail = email.trim();
     const cleanName = displayName.trim() || cleanEmail.split('@')[0];
     set({
@@ -216,15 +235,21 @@ export const useSystemStore = create<SystemStoreState>((set, get) => ({
     notifyPersist(get());
   },
   applyPersistedSettings: (snapshot) =>
-    set((s) => ({
-      fontLevel: snapshot.fontLevel ?? s.fontLevel,
-      highContrast: snapshot.highContrast ?? s.highContrast,
-      speechRate: snapshot.speechRate ?? s.speechRate,
-      voiceGender: snapshot.voiceGender ?? s.voiceGender,
-      emergencyInfo: snapshot.emergencyInfo ?? s.emergencyInfo,
-      onboardingStatus: snapshot.onboardingStatus ?? s.onboardingStatus,
-      userAccount: snapshot.userAccount ?? s.userAccount,
-    })),
+    set((s) => {
+      const isAccEnabled = snapshot.accountEnabled ?? s.accountEnabled;
+      return {
+        fontLevel: snapshot.fontLevel ?? s.fontLevel,
+        highContrast: snapshot.highContrast ?? s.highContrast,
+        speechRate: snapshot.speechRate ?? s.speechRate,
+        voiceGender: snapshot.voiceGender ?? s.voiceGender,
+        emergencyInfo: snapshot.emergencyInfo ?? s.emergencyInfo,
+        onboardingStatus: snapshot.onboardingStatus ?? s.onboardingStatus,
+        accountEnabled: isAccEnabled,
+        userAccount: isAccEnabled
+          ? (snapshot.userAccount ?? s.userAccount)
+          : { isLoggedIn: false, provider: 'guest', syncStatus: 'offline' },
+      };
+    }),
   addHistoryEntry: (speaker, text, tMs = Date.now()) =>
     set((s) => ({
       history: [

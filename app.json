@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Người Câm - Giao tiếp",
-    "slug": "nguoi-cam-sign-comm",
+    "name": "HandTalk",
+    "slug": "handtalk",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "nguoicamsign",
+    "scheme": "handtalk",
     "userInterfaceStyle": "light",
     "android": {
       "package": "com.nguoicam.app",

@@ -33,6 +33,7 @@ export default function SettingsTab(): React.ReactElement {
   const onboardingStatus = useSystemStore((s) => s.onboardingStatus);
   const history = useSystemStore((s) => s.history);
   const userAccount = useSystemStore((s) => s.userAccount);
+  const accountEnabled = useSystemStore((s) => s.accountEnabled);
 
   const setFontLevel = useSystemStore((s) => s.setFontLevel);
   const setHighContrast = useSystemStore((s) => s.setHighContrast);
@@ -41,7 +42,6 @@ export default function SettingsTab(): React.ReactElement {
   const setEmergencyInfo = useSystemStore((s) => s.setEmergencyInfo);
   const setStatusLight = useSystemStore((s) => s.setStatusLight);
   const clearHistory = useSystemStore((s) => s.clearHistory);
-  const loginUser = useSystemStore((s) => s.loginUser);
   const loginWithGoogle = useSystemStore((s) => s.loginWithGoogle);
   const loginWithEmail = useSystemStore((s) => s.loginWithEmail);
   const registerUser = useSystemStore((s) => s.registerUser);
@@ -57,7 +57,6 @@ export default function SettingsTab(): React.ReactElement {
   const [regName, setRegName] = useState('');
   const [regConfirmPassword, setRegConfirmPassword] = useState('');
   const [authError, setAuthError] = useState<string | null>(null);
-  const [authFeedback, setAuthFeedback] = useState<string | null>(null);
 
   const runSystemCheck = async () => {
     const ok = await hasVietnameseVoice();
@@ -196,54 +195,85 @@ export default function SettingsTab(): React.ReactElement {
 
                 <AppText variant="caption" weight="500" color={theme.colors.textMuted}>
                   {userAccount.isLoggedIn
-                    ? `${userAccount.email ?? 'nguoidung@nguoicam.vn'} · Đã đồng bộ mây`
+                    ? `${userAccount.email ?? 'nguoidung@example.com'} · Đã đồng bộ mây`
                     : VI_STRINGS.settings.accountGuestDesc}
                 </AppText>
               </View>
 
-              {userAccount.isLoggedIn ? (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={VI_STRINGS.settings.accountLogoutButton}
-                  onPress={() => setLogoutModalOpen(true)}
-                  style={({ pressed }) => [
-                    styles.logoutSmallBtn,
-                    {
-                      borderColor: highContrast ? theme.colors.danger : '#FECACA',
-                      backgroundColor: highContrast ? theme.colors.bg : '#FEF2F2',
-                      opacity: pressed ? 0.85 : 1,
-                    },
-                  ]}
-                >
-                  <Ionicons name="log-out-outline" size={14} color={theme.colors.danger} />
-                  <AppText variant="caption" weight="600" color={theme.colors.danger}>
-                    {VI_STRINGS.settings.accountLogoutButton}
-                  </AppText>
-                </Pressable>
+              {accountEnabled ? (
+                userAccount.isLoggedIn ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={VI_STRINGS.settings.accountLogoutButton}
+                    onPress={() => setLogoutModalOpen(true)}
+                    style={({ pressed }) => [
+                      styles.logoutSmallBtn,
+                      {
+                        borderColor: highContrast ? theme.colors.danger : '#FECACA',
+                        backgroundColor: highContrast ? theme.colors.bg : '#FEF2F2',
+                        opacity: pressed ? 0.85 : 1,
+                      },
+                    ]}
+                  >
+                    <Ionicons name="log-out-outline" size={14} color={theme.colors.danger} />
+                    <AppText variant="caption" weight="600" color={theme.colors.danger}>
+                      {VI_STRINGS.settings.accountLogoutButton}
+                    </AppText>
+                  </Pressable>
+                ) : (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={VI_STRINGS.settings.accountLoginButton}
+                    onPress={() => {
+                      setAuthError(null);
+                      setAuthMode('login');
+                      setLoginModalOpen(true);
+                    }}
+                    style={({ pressed }) => [
+                      styles.loginSmallBtn,
+                      {
+                        backgroundColor: theme.colors.primary,
+                        opacity: pressed ? 0.88 : 1,
+                      },
+                    ]}
+                  >
+                    <Ionicons name="log-in-outline" size={14} color={theme.colors.onPrimary} />
+                    <AppText variant="caption" weight="600" color={theme.colors.onPrimary}>
+                      {VI_STRINGS.settings.accountLoginButton}
+                    </AppText>
+                  </Pressable>
+                )
               ) : (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={VI_STRINGS.settings.accountLoginButton}
-                  onPress={() => {
-                    setAuthError(null);
-                    setAuthMode('login');
-                    setLoginModalOpen(true);
-                  }}
-                  style={({ pressed }) => [
-                    styles.loginSmallBtn,
+                <View
+                  style={[
+                    styles.offlinePill,
                     {
-                      backgroundColor: theme.colors.primary,
-                      opacity: pressed ? 0.88 : 1,
+                      backgroundColor: highContrast ? theme.colors.bg : '#F1F5F9',
+                      borderColor: highContrast ? theme.colors.border : '#E2E8F0',
                     },
                   ]}
                 >
-                  <Ionicons name="log-in-outline" size={14} color={theme.colors.onPrimary} />
-                  <AppText variant="caption" weight="600" color={theme.colors.onPrimary}>
-                    {VI_STRINGS.settings.accountLoginButton}
+                  <Ionicons name="cloud-offline-outline" size={14} color={theme.colors.textMuted} />
+                  <AppText variant="caption" weight="600" color={theme.colors.textMuted}>
+                    {VI_STRINGS.settings.accountOfflineBadge}
                   </AppText>
-                </Pressable>
+                </View>
               )}
             </View>
+
+            {!accountEnabled ? (
+              <View
+                style={[
+                  styles.accountNoticeRow,
+                  { borderTopColor: highContrast ? theme.colors.border : '#F1F5F9' },
+                ]}
+              >
+                <Ionicons name="information-circle-outline" size={14} color={theme.colors.textMuted} />
+                <AppText variant="caption" weight="500" color={theme.colors.textMuted} style={{ flex: 1 }}>
+                  {VI_STRINGS.settings.accountComingSoonNotice}
+                </AppText>
+              </View>
+            ) : null}
           </View>
         </View>
 
@@ -607,7 +637,7 @@ export default function SettingsTab(): React.ReactElement {
             </View>
 
             <AppText variant="caption" weight="500" color={theme.colors.textMuted} style={styles.tipText}>
-              {VI_STRINGS.settings.oppoBatteryTip}
+              {VI_STRINGS.settings.batteryOptimizationTip}
             </AppText>
 
             {/* Mở lại hướng dẫn ban đầu */}
@@ -669,13 +699,14 @@ export default function SettingsTab(): React.ReactElement {
         onClose={() => setOnboardingOpen(false)}
       />
 
-      {/* Modal Đăng nhập / Đăng ký Chuẩn với Google Sign-In */}
-      <Modal
-        visible={loginModalOpen}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setLoginModalOpen(false)}
-      >
+      {/* Modal Đăng nhập / Đăng ký (chỉ bật khi accountEnabled = true) */}
+      {accountEnabled ? (
+        <Modal
+          visible={loginModalOpen}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setLoginModalOpen(false)}
+        >
         <View style={styles.sheetBackdrop}>
           <Pressable
             accessibilityRole="button"
@@ -949,7 +980,7 @@ export default function SettingsTab(): React.ReactElement {
                   accessibilityRole="button"
                   accessibilityLabel={VI_STRINGS.settings.accountQuickLogin}
                   onPress={() => {
-                    loginWithEmail('nguoidung.demo@nguoicam.vn', 'Người dùng Thử nghiệm');
+                    loginWithEmail('nguoidung.demo@handtalk.vn', 'Người dùng Thử nghiệm');
                     setLoginModalOpen(false);
                   }}
                   style={({ pressed }) => [
@@ -1004,14 +1035,16 @@ export default function SettingsTab(): React.ReactElement {
           </View>
         </View>
       </Modal>
+      ) : null}
 
       {/* Modal Đăng xuất với 3 lựa chọn theo chuẩn B-06 */}
-      <Modal
-        visible={logoutModalOpen}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setLogoutModalOpen(false)}
-      >
+      {logoutModalOpen && (
+        <Modal
+          visible={logoutModalOpen}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setLogoutModalOpen(false)}
+        >
         <View style={styles.sheetBackdrop}>
           <Pressable
             accessibilityRole="button"
@@ -1137,6 +1170,7 @@ export default function SettingsTab(): React.ReactElement {
           </View>
         </View>
       </Modal>
+      )}
     </SafeAreaView>
   );
 }
@@ -1444,5 +1478,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 6,
+  },
+  offlinePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  accountNoticeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    marginTop: 6,
   },
 });

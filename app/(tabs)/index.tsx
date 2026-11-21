@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useKeepAwake } from 'expo-keep-awake';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -33,6 +33,11 @@ export default function CommunicateTab(): React.ReactElement {
 
   const recentEntries = history.slice(-3);
   const latestMe = [...history].reverse().find((h) => h.speaker === 'me');
+
+  const quickReplies = useMemo(
+    () => [...VI_STRINGS.communicate.quickReplies, ...pinnedCards.map((c) => c.content)],
+    [pinnedCards]
+  );
 
   const speakAndRecord = (text: string) => {
     const trimmed = text.trim();
@@ -239,22 +244,21 @@ export default function CommunicateTab(): React.ReactElement {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.quickChipsScroll}
           >
-            {[...VI_STRINGS.communicate.quickReplies, ...pinnedCards.map((c) => c.content)].map(
-              (phrase, idx) => (
-                <Pressable
-                  key={`${phrase}-${idx}`}
-                  accessibilityRole="button"
-                  accessibilityLabel={phrase}
-                  onPress={() => speakAndRecord(phrase)}
-                  style={({ pressed }) => [
-                    styles.quickPill,
-                    {
-                      backgroundColor: highContrast ? theme.colors.surface : '#FFFFFF',
-                      borderColor: highContrast ? theme.colors.border : 'rgba(226, 232, 240, 0.8)',
-                      opacity: pressed ? 0.85 : 1,
-                    },
-                  ]}
-                >
+            {quickReplies.map((phrase, idx) => (
+              <Pressable
+                key={`${phrase}-${idx}`}
+                accessibilityRole="button"
+                accessibilityLabel={phrase}
+                onPress={() => speakAndRecord(phrase)}
+                style={({ pressed }) => [
+                  styles.quickPill,
+                  {
+                    backgroundColor: highContrast ? theme.colors.surface : '#FFFFFF',
+                    borderColor: highContrast ? theme.colors.border : 'rgba(226, 232, 240, 0.8)',
+                    opacity: pressed ? 0.85 : 1,
+                  },
+                ]}
+              >
                   <Ionicons name="flash" size={12} color={theme.colors.primary} />
                   <AppText variant="caption" weight="600" color={theme.colors.text}>
                     {phrase}
@@ -376,15 +380,18 @@ export default function CommunicateTab(): React.ReactElement {
         </View>
       </ScrollView>
 
-      <CameraModal visible={cameraOpen} onClose={() => setCameraOpen(false)} />
+      {cameraOpen ? (
+        <CameraModal visible={cameraOpen} onClose={() => setCameraOpen(false)} />
+      ) : null}
 
       {/* Sheet Gõ phím */}
-      <Modal
-        visible={typeSheetOpen}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setTypeSheetOpen(false)}
-      >
+      {typeSheetOpen && (
+        <Modal
+          visible={typeSheetOpen}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setTypeSheetOpen(false)}
+        >
         <View style={styles.sheetBackdrop}>
           <Pressable
             accessibilityRole="button"
@@ -475,14 +482,16 @@ export default function CommunicateTab(): React.ReactElement {
           </View>
         </View>
       </Modal>
+      )}
 
       {/* Sheet Người kia nói */}
-      <Modal
-        visible={otherSheetOpen}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setOtherSheetOpen(false)}
-      >
+      {otherSheetOpen && (
+        <Modal
+          visible={otherSheetOpen}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setOtherSheetOpen(false)}
+        >
         <View style={styles.sheetBackdrop}>
           <Pressable
             accessibilityRole="button"
@@ -580,6 +589,7 @@ export default function CommunicateTab(): React.ReactElement {
           </View>
         </View>
       </Modal>
+      )}
     </SafeAreaView>
   );
 }

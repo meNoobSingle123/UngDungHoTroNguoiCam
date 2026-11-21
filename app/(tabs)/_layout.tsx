@@ -1,11 +1,9 @@
 import React from 'react';
-import { Dimensions, Easing, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { VI_STRINGS } from '../../src/core/i18n/vi.ts';
 import { useAppTheme } from '../../src/core/theme/ThemeProvider.tsx';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -41,30 +39,13 @@ export default function TabsLayout(): React.ReactElement {
 
   return (
     <Tabs
+      detachInactiveScreens={false}
       screenOptions={{
         headerShown: false,
-        animation: 'shift',
+        animation: 'none',
+        lazy: false,
         sceneStyle: {
           backgroundColor: highContrast ? theme.colors.bg : '#F8FAFC',
-        },
-        sceneStyleInterpolator: ({ current }) => ({
-          sceneStyle: {
-            transform: [
-              {
-                translateX: current.progress.interpolate({
-                  inputRange: [-1, 0, 1],
-                  outputRange: [-SCREEN_WIDTH, 0, SCREEN_WIDTH],
-                }),
-              },
-            ],
-          },
-        }),
-        transitionSpec: {
-          animation: 'timing',
-          config: {
-            duration: 200,
-            easing: Easing.out(Easing.cubic),
-          },
         },
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.textMuted,

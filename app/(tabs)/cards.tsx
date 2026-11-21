@@ -409,10 +409,10 @@ export default function CardsTab(): React.ReactElement {
           data={visibleCards}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
-          initialNumToRender={10}
-          maxToRenderPerBatch={10}
-          windowSize={7}
-          removeClippedSubviews={false}
+          initialNumToRender={8}
+          maxToRenderPerBatch={6}
+          windowSize={5}
+          removeClippedSubviews={true}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <View style={styles.emptyIconCircle}>
@@ -429,12 +429,13 @@ export default function CardsTab(): React.ReactElement {
       </View>
 
       {/* Sheet Sửa / Tạo thẻ */}
-      <Modal
-        visible={editorOpen}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setEditorOpen(false)}
-      >
+      {editorOpen && (
+        <Modal
+          visible={editorOpen}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setEditorOpen(false)}
+        >
         <View style={styles.sheetBackdrop}>
           <Pressable
             accessibilityRole="button"
@@ -569,6 +570,7 @@ export default function CardsTab(): React.ReactElement {
           </View>
         </View>
       </Modal>
+      )}
     </SafeAreaView>
   );
 }
