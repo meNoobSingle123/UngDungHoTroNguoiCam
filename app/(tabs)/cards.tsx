@@ -11,6 +11,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useCardsStore } from '../../src/core/db/cardsStorage.ts';
+import {
+  hapticLight,
+  hapticSuccess,
+  hapticWarning,
+} from '../../src/core/haptics/hapticFeedback.ts';
 import { VI_STRINGS } from '../../src/core/i18n/vi.ts';
 import { useSystemStore } from '../../src/core/store/systemStatus.ts';
 import { AppText, useAppTheme } from '../../src/core/theme/ThemeProvider.tsx';
@@ -43,6 +48,9 @@ export default function CardsTab(): React.ReactElement {
   const [draftContent, setDraftContent] = useState('');
   const [draftTopic, setDraftTopic] = useState<string>(VI_STRINGS.cards.topics[0]);
 
+  const [presentingCard, setPresentingCard] = useState<(typeof visibleCards)[number] | null>(null);
+  const [isPresenterFlipped180, setIsPresenterFlipped180] = useState(false);
+
   void revision;
   const visibleCards = useMemo(
     () => listCards({ scope, topic: selectedTopic, query }),
@@ -51,6 +59,7 @@ export default function CardsTab(): React.ReactElement {
   const showUndo = undoUntil !== null && Date.now() <= undoUntil;
 
   const openCreate = () => {
+    hapticLight();
     setEditingId(null);
     setDraftContent('');
     setDraftTopic(VI_STRINGS.cards.topics[0]);
@@ -58,6 +67,7 @@ export default function CardsTab(): React.ReactElement {
   };
 
   const openEdit = (id: string, content: string, topic?: string) => {
+    hapticLight();
     setEditingId(id);
     setDraftContent(content);
     setDraftTopic(topic ?? VI_STRINGS.cards.topics[0]);
@@ -65,6 +75,7 @@ export default function CardsTab(): React.ReactElement {
   };
 
   const handleSave = () => {
+    hapticSuccess();
     if (editingId) {
       editCard(editingId, { content: draftContent, topic: draftTopic });
     } else {
@@ -96,7 +107,12 @@ export default function CardsTab(): React.ReactElement {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={item.content}
-          onPress={() => speakVietnamese(item.content, { rate: speechRate })}
+          testID={`card-item-${item.id}`}
+          onPress={() => {
+            hapticLight();
+            setIsPresenterFlipped180(false);
+            setPresentingCard(item);
+          }}
           style={({ pressed }) => [
             styles.cardTile,
             {
@@ -133,7 +149,14 @@ export default function CardsTab(): React.ReactElement {
               ) : null}
             </View>
 
-            <View
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={VI_STRINGS.cards.previewSpeak}
+              onPress={(e) => {
+                e.stopPropagation();
+                hapticLight();
+                speakVietnamese(item.content, { rate: speechRate });
+              }}
               style={[
                 styles.speakIconCircle,
                 { backgroundColor: highContrast ? theme.colors.bg : '#EEF2FF' },
@@ -144,7 +167,7 @@ export default function CardsTab(): React.ReactElement {
                 size={16}
                 color={theme.colors.primary}
               />
-            </View>
+            </Pressable>
           </View>
 
           <AppText variant="subhead" weight="600" style={styles.cardContentText}>
@@ -158,7 +181,10 @@ export default function CardsTab(): React.ReactElement {
                 accessibilityLabel={
                   item.pinned ? VI_STRINGS.cards.unpinButton : VI_STRINGS.cards.pinButton
                 }
-                onPress={() => togglePin(item.id)}
+                onPress={() => {
+                  hapticLight();
+                  togglePin(item.id);
+                }}
                 style={[
                   styles.actionPill,
                   {
@@ -190,7 +216,10 @@ export default function CardsTab(): React.ReactElement {
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={VI_STRINGS.cards.editButton}
-                onPress={() => openEdit(item.id, item.content, item.topic)}
+                onPress={() => {
+                  hapticLight();
+                  openEdit(item.id, item.content, item.topic);
+                }}
                 style={[
                   styles.actionPill,
                   {
@@ -208,7 +237,10 @@ export default function CardsTab(): React.ReactElement {
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={VI_STRINGS.cards.deleteButton}
-                onPress={() => deleteCard(item.id)}
+                onPress={() => {
+                  hapticWarning();
+                  deleteCard(item.id);
+                }}
                 style={[
                   styles.actionPill,
                   {
@@ -370,7 +402,10 @@ export default function CardsTab(): React.ReactElement {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={VI_STRINGS.cards.deletedUndo}
-            onPress={undoDelete}
+            onPress={() => {
+              hapticSuccess();
+              undoDelete();
+            }}
             style={[
               styles.undoBar,
               {
@@ -571,6 +606,136 @@ export default function CardsTab(): React.ReactElement {
         </View>
       </Modal>
       )}
+
+      {/* Modal Trình Chiếu Thẻ Toàn Màn Hình (Chữ lớn cho người đối diện đọc) */}
+      {presentingCard && (
+        <Modal
+          visible={!!presentingCard}
+          transparent
+          animationType="fade"
+          onRequestClose={() => {
+            hapticLight();
+            setPresentingCard(null);
+          }}
+        >
+          <View style={styles.presenterBackdrop}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={VI_STRINGS.communicate.closeButton}
+              style={StyleSheet.absoluteFill}
+              onPress={() => {
+                hapticLight();
+                setPresentingCard(null);
+              }}
+            />
+            <View
+              style={[
+                styles.presenterCard,
+                {
+                  backgroundColor: highContrast ? theme.colors.surface : '#FFFFFF',
+                  borderColor: highContrast ? theme.colors.border : '#E2E8F0',
+                },
+              ]}
+            >
+              <View style={styles.presenterHeader}>
+                {presentingCard.topic ? (
+                  <View
+                    style={[
+                      styles.topicBadge,
+                      { backgroundColor: getTopicColor(presentingCard.topic).bg },
+                    ]}
+                  >
+                    <AppText
+                      variant="subhead"
+                      weight="700"
+                      color={getTopicColor(presentingCard.topic).text}
+                    >
+                      {presentingCard.topic}
+                    </AppText>
+                  </View>
+                ) : (
+                  <View />
+                )}
+
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={VI_STRINGS.communicate.closeButton}
+                  testID="presenter-close-btn"
+                  onPress={() => {
+                    hapticLight();
+                    setPresentingCard(null);
+                  }}
+                  style={styles.presenterCloseBtn}
+                >
+                  <Ionicons name="close" size={24} color={theme.colors.textMuted} />
+                </Pressable>
+              </View>
+
+              <View
+                style={[
+                  styles.presenterBody,
+                  isPresenterFlipped180 && styles.presenterFlipped,
+                ]}
+              >
+                <AppText
+                  testID="presenter-text"
+                  variant="display"
+                  weight="700"
+                  style={[styles.presenterText, { color: theme.colors.text }]}
+                >
+                  {presentingCard.content}
+                </AppText>
+              </View>
+
+              <View style={styles.presenterActions}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Đọc câu này"
+                  testID="presenter-speak-btn"
+                  onPress={() => {
+                    hapticLight();
+                    speakVietnamese(presentingCard.content, { rate: speechRate });
+                  }}
+                  style={[
+                    styles.presenterActionBtn,
+                    {
+                      backgroundColor: theme.colors.primary,
+                    },
+                  ]}
+                >
+                  <Ionicons name="volume-high" size={20} color={theme.colors.onPrimary} />
+                  <AppText variant="subhead" weight="700" color={theme.colors.onPrimary}>
+                    Đọc câu này
+                  </AppText>
+                </Pressable>
+
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Lật 180°"
+                  testID="presenter-flip-btn"
+                  onPress={() => {
+                    hapticLight();
+                    setIsPresenterFlipped180((prev) => !prev);
+                  }}
+                  style={[
+                    styles.presenterActionBtn,
+                    {
+                      backgroundColor: highContrast ? theme.colors.bg : '#F1F5F9',
+                      borderColor: theme.colors.border,
+                      borderWidth: 1,
+                    },
+                  ]}
+                >
+                  <Ionicons name="sync-outline" size={18} color={theme.colors.text} />
+                  <AppText variant="subhead" weight="600" color={theme.colors.text}>
+                    {isPresenterFlipped180 ? 'Lật về' : 'Lật 180°'}
+                  </AppText>
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      )}
     </SafeAreaView>
   );
 }
@@ -768,6 +933,68 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     height: 48,
+    borderRadius: 16,
+  },
+  presenterBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.72)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  presenterCard: {
+    width: '100%',
+    maxHeight: '85%',
+    borderRadius: 24,
+    borderWidth: 1,
+    padding: 24,
+    gap: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.25,
+    shadowRadius: 28,
+    elevation: 24,
+  },
+  presenterHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  presenterCloseBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(148, 163, 184, 0.15)',
+  },
+  presenterBody: {
+    minHeight: 180,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 24,
+  },
+  presenterFlipped: {
+    transform: [{ rotate: '180deg' }],
+  },
+  presenterText: {
+    fontSize: 34,
+    lineHeight: 46,
+    textAlign: 'center',
+    letterSpacing: -0.5,
+  },
+  presenterActions: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 8,
+  },
+  presenterActionBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    height: 52,
     borderRadius: 16,
   },
 });

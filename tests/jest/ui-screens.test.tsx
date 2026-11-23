@@ -31,7 +31,9 @@ jest.mock('expo-speech', () => ({
 
 jest.mock('expo-haptics', () => ({
   notificationAsync: jest.fn(async () => {}),
-  NotificationFeedbackType: { Warning: 'Warning' },
+  NotificationFeedbackType: { Warning: 'Warning', Success: 'Success' },
+  impactAsync: jest.fn(async () => {}),
+  ImpactFeedbackStyle: { Light: 'Light', Medium: 'Medium', Heavy: 'Heavy' },
 }));
 
 jest.mock('@expo/vector-icons', () => {
@@ -185,6 +187,38 @@ describe('UI Screens & MockEngine integration (Jest / RNTL)', () => {
     await fireEvent.changeText(screen.getByTestId('other-speech-input'), 'Tôi là bác sĩ');
     await fireEvent.press(screen.getByTestId('other-sheet-submit-btn'));
     expect(onOtherSubmit).toHaveBeenCalledWith('Tôi là bác sĩ');
+
+    await unmount();
+  });
+
+  test('CardsTab opens Big Card Presenter modal, supports 180 flip and speech playback', async () => {
+    const { unmount } = await render(
+      <ThemeProvider>
+        <CardsTab />
+      </ThemeProvider>
+    );
+
+    const firstCard = screen.getAllByRole('button').find((el) => {
+      return el.props.accessibilityLabel && el.props.testID?.startsWith('card-item-');
+    });
+    expect(firstCard).toBeTruthy();
+
+    if (firstCard) {
+      await fireEvent.press(firstCard);
+      expect(screen.getByTestId('presenter-text')).toBeTruthy();
+      expect(screen.getByTestId('presenter-speak-btn')).toBeTruthy();
+      expect(screen.getByTestId('presenter-flip-btn')).toBeTruthy();
+
+      await fireEvent.press(screen.getByTestId('presenter-flip-btn'));
+      expect(screen.getByText('Lật về')).toBeTruthy();
+
+      await fireEvent.press(screen.getByTestId('presenter-speak-btn'));
+      const speech = require('expo-speech');
+      expect(speech.speak).toHaveBeenCalled();
+
+      await fireEvent.press(screen.getByTestId('presenter-close-btn'));
+      expect(screen.queryByTestId('presenter-text')).toBeNull();
+    }
 
     await unmount();
   });

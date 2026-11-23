@@ -1,4 +1,5 @@
 import * as Speech from 'expo-speech';
+import { hapticLight, hapticSuccess } from '../haptics/hapticFeedback.ts';
 import { useSystemStore, type VoiceGender } from '../store/systemStatus.ts';
 
 export interface SpeakOptions {
@@ -87,8 +88,14 @@ export function speakVietnamese(text: string, options: SpeakOptions = {}): void 
         ...(voiceId ? { voice: voiceId } : {}),
         rate: resolvedRate,
         pitch: resolvedPitch,
-        onStart: options.onStart,
-        onDone: options.onDone,
+        onStart: () => {
+          hapticLight();
+          options.onStart?.();
+        },
+        onDone: () => {
+          hapticSuccess();
+          options.onDone?.();
+        },
         onError: options.onError,
       });
     };
