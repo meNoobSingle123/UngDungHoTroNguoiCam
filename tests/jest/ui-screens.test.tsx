@@ -8,6 +8,12 @@ import { useSystemStore } from '../../src/core/store/systemStatus.ts';
 import { ThemeProvider } from '../../src/core/theme/ThemeProvider.tsx';
 import { CameraModal } from '../../src/features/camera/CameraModal.tsx';
 import { OnboardingModal } from '../../src/features/onboarding/OnboardingModal.tsx';
+import { ConversationHistoryCard } from '../../src/features/communicate/ConversationHistoryCard.tsx';
+import { QuickRepliesBar } from '../../src/features/communicate/QuickRepliesBar.tsx';
+import {
+  OtherSpeechSheet,
+  TypeSpeechSheet,
+} from '../../src/features/communicate/CommunicateSheets.tsx';
 import CommunicateTab from '../../app/(tabs)/index.tsx';
 import CardsTab from '../../app/(tabs)/cards.tsx';
 import DictionaryTab from '../../app/(tabs)/dictionary.tsx';
@@ -134,5 +140,52 @@ describe('UI Screens & MockEngine integration (Jest / RNTL)', () => {
     );
     expect(screen.getByTestId('modifier-question')).toBeTruthy();
     expect(screen.getByTestId('modifier-urgent')).toBeTruthy();
+  });
+
+  test('ConversationHistoryCard and QuickRepliesBar handle user interaction', async () => {
+    const onSelectReply = jest.fn();
+    const { unmount } = await render(
+      <ThemeProvider>
+        <ConversationHistoryCard />
+        <QuickRepliesBar onSelectReply={onSelectReply} />
+      </ThemeProvider>
+    );
+
+    expect(screen.getByTestId('conversation-history-card')).toBeTruthy();
+    expect(screen.getByTestId('quick-replies-bar')).toBeTruthy();
+
+    // Toggle 180 flip
+    await fireEvent.press(screen.getByTestId('flip-180-btn'));
+    expect(screen.getByTestId('flip-180-badge')).toBeTruthy();
+
+    // Quick replies trigger callback
+    await fireEvent.press(screen.getByTestId('quick-reply-chip-0'));
+    expect(onSelectReply).toHaveBeenCalledTimes(1);
+    await unmount();
+  });
+
+  test('TypeSpeechSheet and OtherSpeechSheet handle text inputs and submit', async () => {
+    const onTypeSubmit = jest.fn();
+    const onOtherSubmit = jest.fn();
+
+    const { unmount } = await render(
+      <ThemeProvider>
+        <TypeSpeechSheet visible onClose={() => {}} onSubmit={onTypeSubmit} />
+        <OtherSpeechSheet visible onClose={() => {}} onSubmit={onOtherSubmit} />
+      </ThemeProvider>
+    );
+
+    expect(screen.getByTestId('type-speech-sheet')).toBeTruthy();
+    expect(screen.getByTestId('other-speech-sheet')).toBeTruthy();
+
+    await fireEvent.changeText(screen.getByTestId('type-speech-input'), 'Xin chào bạn');
+    await fireEvent.press(screen.getByTestId('type-sheet-submit-btn'));
+    expect(onTypeSubmit).toHaveBeenCalledWith('Xin chào bạn');
+
+    await fireEvent.changeText(screen.getByTestId('other-speech-input'), 'Tôi là bác sĩ');
+    await fireEvent.press(screen.getByTestId('other-sheet-submit-btn'));
+    expect(onOtherSubmit).toHaveBeenCalledWith('Tôi là bác sĩ');
+
+    await unmount();
   });
 });
