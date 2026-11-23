@@ -51,7 +51,6 @@ export default function CardsTab(): React.ReactElement {
   const [presentingCard, setPresentingCard] = useState<(typeof visibleCards)[number] | null>(null);
   const [isPresenterFlipped180, setIsPresenterFlipped180] = useState(false);
 
-  void revision;
   const visibleCards = useMemo(
     () => listCards({ scope, topic: selectedTopic, query }),
     [listCards, scope, selectedTopic, query, revision]
@@ -474,7 +473,7 @@ export default function CardsTab(): React.ReactElement {
         <View style={styles.sheetBackdrop}>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={VI_STRINGS.cards.undoButton}
+            accessibilityLabel={VI_STRINGS.communicate.closeButton}
             style={StyleSheet.absoluteFill}
             onPress={() => setEditorOpen(false)}
           />
