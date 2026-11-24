@@ -1,6 +1,10 @@
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import {
+  hapticLight,
+  hapticWarning,
+} from '../../core/haptics/hapticFeedback.ts';
 import { VI_STRINGS } from '../../core/i18n/vi.ts';
 import { useSystemStore } from '../../core/store/systemStatus.ts';
 import { AppText, useAppTheme } from '../../core/theme/ThemeProvider.tsx';
@@ -18,6 +22,21 @@ export function ConversationHistoryCard(): React.ReactElement {
 
   const recentEntries = history.slice(-3);
   const latestMe = [...history].reverse().find((h) => h.speaker === 'me');
+  const targetToReplay =
+    recentEntries.length > 0
+      ? recentEntries[recentEntries.length - 1].text
+      : (latestMe?.text ?? null);
+
+  const handleReplay = () => {
+    if (!targetToReplay) return;
+    hapticLight();
+    speakVietnamese(targetToReplay, { rate: speechRate });
+  };
+
+  const handleClear = () => {
+    hapticWarning();
+    clearHistory();
+  };
 
   return (
     <View
@@ -45,6 +64,10 @@ export function ConversationHistoryCard(): React.ReactElement {
               Đang lật 180°
             </AppText>
           </View>
+        ) : recentEntries.length > 0 ? (
+          <AppText variant="caption" color={theme.colors.textMuted} style={{ fontSize: 11 }}>
+            Chạm tin nhắn để đọc
+          </AppText>
         ) : null}
       </View>
 
@@ -86,9 +109,37 @@ export function ConversationHistoryCard(): React.ReactElement {
                   isFlipped180 ? { transform: [{ rotate: '180deg' }] } : undefined,
                 ]}
               >
-                <View
-                  style={[
+                {/* Avatar Người đối diện (bên trái) */}
+                {!isMe ? (
+                  <View
+                    style={[
+                      styles.avatarCircle,
+                      {
+                        backgroundColor: highContrast ? theme.colors.surface : '#FEF3C7',
+                        borderColor: highContrast ? theme.colors.border : '#FDE68A',
+                      },
+                    ]}
+                  >
+                    <Ionicons
+                      name="mic"
+                      size={14}
+                      color={highContrast ? theme.colors.warning : '#D97706'}
+                    />
+                  </View>
+                ) : null}
+
+                {/* Bong bóng tin nhắn tương tác (chạm là đọc lại) */}
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`Đọc lại câu: ${item.text}`}
+                  testID={`history-bubble-${idx}`}
+                  onPress={() => {
+                    hapticLight();
+                    speakVietnamese(item.text, { rate: speechRate });
+                  }}
+                  style={({ pressed }) => [
                     styles.bubble,
+                    isMe ? styles.bubbleMe : styles.bubbleOther,
                     {
                       backgroundColor: isMe
                         ? highContrast
@@ -96,8 +147,15 @@ export function ConversationHistoryCard(): React.ReactElement {
                           : '#EEF2FF'
                         : highContrast
                           ? theme.colors.surface
-                          : '#F1F5F9',
-                      borderColor: isMe ? theme.colors.primary : 'transparent',
+                          : '#FFFBEB',
+                      borderColor: isMe
+                        ? highContrast
+                          ? theme.colors.primary
+                          : '#BFDBFE'
+                        : highContrast
+                          ? theme.colors.border
+                          : '#FDE68A',
+                      opacity: pressed ? 0.85 : 1,
                     },
                   ]}
                 >
@@ -105,19 +163,55 @@ export function ConversationHistoryCard(): React.ReactElement {
                     <AppText
                       variant="caption"
                       weight="600"
-                      color={isMe ? theme.colors.primary : theme.colors.textMuted}
+                      color={
+                        isMe
+                          ? theme.colors.primary
+                          : highContrast
+                            ? theme.colors.warning
+                            : '#B45309'
+                      }
                     >
                       {isMe ? 'Tôi' : 'Người đối diện'}
                     </AppText>
+                    <Ionicons
+                      name="volume-medium-outline"
+                      size={13}
+                      color={
+                        isMe
+                          ? theme.colors.primary
+                          : highContrast
+                            ? theme.colors.warning
+                            : '#B45309'
+                      }
+                    />
                   </View>
                   <AppText
                     variant={isNewest ? 'subhead' : 'body'}
                     weight={isNewest ? '600' : '500'}
-                    color={isMe ? theme.colors.text : theme.colors.primary}
+                    color={theme.colors.text}
                   >
                     {item.text}
                   </AppText>
-                </View>
+                </Pressable>
+
+                {/* Avatar Tôi (bên phải) */}
+                {isMe ? (
+                  <View
+                    style={[
+                      styles.avatarCircle,
+                      {
+                        backgroundColor: highContrast ? theme.colors.surface : '#EEF2FF',
+                        borderColor: highContrast ? theme.colors.border : '#BFDBFE',
+                      },
+                    ]}
+                  >
+                    <Ionicons
+                      name="person"
+                      size={14}
+                      color={highContrast ? theme.colors.primary : '#2563EB'}
+                    />
+                  </View>
+                ) : null}
               </View>
             );
           })
@@ -135,7 +229,10 @@ export function ConversationHistoryCard(): React.ReactElement {
           accessibilityRole="button"
           accessibilityLabel={VI_STRINGS.communicate.flip180}
           testID="flip-180-btn"
-          onPress={toggleFlip180}
+          onPress={() => {
+            hapticLight();
+            toggleFlip180();
+          }}
           style={({ pressed }) => [
             styles.toolPill,
             {
@@ -169,13 +266,13 @@ export function ConversationHistoryCard(): React.ReactElement {
           accessibilityRole="button"
           accessibilityLabel={VI_STRINGS.communicate.replay}
           testID="replay-btn"
-          disabled={!latestMe}
-          onPress={() => latestMe && speakVietnamese(latestMe.text, { rate: speechRate })}
+          disabled={!targetToReplay}
+          onPress={handleReplay}
           style={({ pressed }) => [
             styles.toolPill,
             {
               backgroundColor: highContrast ? theme.colors.surface : '#F8FAFC',
-              opacity: !latestMe ? 0.35 : pressed ? 0.8 : 1,
+              opacity: !targetToReplay ? 0.35 : pressed ? 0.8 : 1,
             },
           ]}
         >
@@ -189,7 +286,8 @@ export function ConversationHistoryCard(): React.ReactElement {
           accessibilityRole="button"
           accessibilityLabel={VI_STRINGS.communicate.clear}
           testID="clear-history-btn"
-          onPress={clearHistory}
+          disabled={recentEntries.length === 0}
+          onPress={handleClear}
           style={({ pressed }) => [
             styles.toolPill,
             {
@@ -242,7 +340,7 @@ const styles = StyleSheet.create({
   dialogueBody: {
     minHeight: 140,
     justifyContent: 'center',
-    gap: 10,
+    gap: 12,
     paddingVertical: 6,
   },
   emptyDialogue: {
@@ -263,6 +361,8 @@ const styles = StyleSheet.create({
   },
   bubbleRow: {
     flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 8,
   },
   bubbleRowMe: {
     justifyContent: 'flex-end',
@@ -270,18 +370,34 @@ const styles = StyleSheet.create({
   bubbleRowOther: {
     justifyContent: 'flex-start',
   },
+  avatarCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 2,
+  },
   bubble: {
-    maxWidth: '84%',
+    maxWidth: '78%',
     borderRadius: 18,
     paddingHorizontal: 14,
     paddingVertical: 10,
     gap: 3,
     borderWidth: 1,
   },
+  bubbleMe: {
+    borderBottomRightRadius: 4,
+  },
+  bubbleOther: {
+    borderBottomLeftRadius: 4,
+  },
   speakerTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    justifyContent: 'space-between',
+    gap: 6,
   },
   dialogueToolbar: {
     flexDirection: 'row',

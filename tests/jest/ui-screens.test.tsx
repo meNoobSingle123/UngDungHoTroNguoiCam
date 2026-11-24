@@ -169,6 +169,40 @@ describe('UI Screens & MockEngine integration (Jest / RNTL)', () => {
     await fireEvent.press(screen.getByTestId('quick-reply-chip-0'));
     expect(onSelectReply).toHaveBeenCalledTimes(1);
     await unmount();
+
+    // With conversation entries: bubble is pressable to speak & replay button works
+    useSystemStore.getState().addHistoryEntry('other', 'Xin chào bác sĩ');
+    useSystemStore.getState().addHistoryEntry('me', 'Tôi bị đau họng');
+
+    const speech = require('expo-speech');
+    speech.speak.mockClear();
+
+    const { unmount: unmountWithHistory } = await render(
+      <ThemeProvider>
+        <ConversationHistoryCard />
+      </ThemeProvider>
+    );
+
+    // Tap bubble directly to speak
+    await fireEvent.press(screen.getByTestId('history-bubble-0'));
+    expect(speech.speak).toHaveBeenCalledWith(
+      'Xin chào bác sĩ',
+      expect.objectContaining({ language: 'vi-VN' })
+    );
+
+    speech.speak.mockClear();
+    // Tap replay button to replay latest entry
+    await fireEvent.press(screen.getByTestId('replay-btn'));
+    expect(speech.speak).toHaveBeenCalledWith(
+      'Tôi bị đau họng',
+      expect.objectContaining({ language: 'vi-VN' })
+    );
+
+    // Clear history button
+    await fireEvent.press(screen.getByTestId('clear-history-btn'));
+    expect(useSystemStore.getState().history).toHaveLength(0);
+
+    await unmountWithHistory();
   });
 
   test('TypeSpeechSheet and OtherSpeechSheet handle text inputs and submit', async () => {

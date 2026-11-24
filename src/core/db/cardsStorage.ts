@@ -7,8 +7,10 @@ import {
   type DefaultCardSeed,
 } from '../../features/cards/cardStore.ts';
 import {
+  registerHistoryPersistListener,
   registerSettingsPersistListener,
   useSystemStore,
+  type ConversationEntry,
   type PersistedSettingsSnapshot,
 } from '../store/systemStatus.ts';
 
@@ -33,7 +35,8 @@ async function getSqliteDb(): Promise<SqliteDbLike | null> {
     const db = (await SQLite.openDatabaseAsync('sign_comm.db')) as unknown as SqliteDbLike;
     await db.execAsync(
       'CREATE TABLE IF NOT EXISTS cards (id TEXT PRIMARY KEY, content TEXT NOT NULL, topic TEXT, icon TEXT, pinned INTEGER NOT NULL DEFAULT 0, updated_at TEXT NOT NULL, deleted INTEGER NOT NULL DEFAULT 0);' +
-        'CREATE TABLE IF NOT EXISTS app_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);'
+        'CREATE TABLE IF NOT EXISTS app_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);' +
+        'CREATE TABLE IF NOT EXISTS conversation_history (id TEXT PRIMARY KEY, speaker TEXT NOT NULL, text TEXT NOT NULL, t_ms INTEGER NOT NULL);'
     );
     cachedDb = db;
     return db;
@@ -71,6 +74,33 @@ async function persistSettingsSnapshot(
 
 registerSettingsPersistListener((settings) => {
   persistSettingsSnapshot(settings).catch(() => {});
+});
+
+async function persistHistoryEntry(entry: ConversationEntry): Promise<void> {
+  const db = await getSqliteDb();
+  if (!db) return;
+  await db.runAsync(
+    'INSERT OR REPLACE INTO conversation_history (id, speaker, text, t_ms) VALUES (?, ?, ?, ?);',
+    entry.id,
+    entry.speaker,
+    entry.text,
+    entry.tMs
+  );
+}
+
+async function clearHistoryDb(): Promise<void> {
+  const db = await getSqliteDb();
+  if (!db) return;
+  await db.runAsync('DELETE FROM conversation_history;');
+}
+
+registerHistoryPersistListener({
+  onAdd: (entry) => {
+    persistHistoryEntry(entry).catch(() => {});
+  },
+  onClear: () => {
+    clearHistoryDb().catch(() => {});
+  },
 });
 
 export interface CardsUiState {
@@ -136,6 +166,23 @@ export const useCardsStore = create<CardsUiState>((set, get) => ({
       if (pref) {
         const parsed = JSON.parse(pref.value) as PersistedSettingsSnapshot;
         useSystemStore.getState().applyPersistedSettings(parsed);
+      }
+
+      const historyRows = await db.getAllAsync<{
+        id: string;
+        speaker: string;
+        text: string;
+        t_ms: number;
+      }>('SELECT id, speaker, text, t_ms FROM conversation_history ORDER BY t_ms ASC;');
+      if (historyRows && historyRows.length > 0) {
+        useSystemStore.setState({
+          history: historyRows.map((r) => ({
+            id: r.id,
+            speaker: r.speaker === 'other' ? 'other' : 'me',
+            text: r.text,
+            tMs: r.t_ms,
+          })),
+        });
       }
     } catch {
       // Safe fallback when SQLite rows are empty or unreadable in tests.

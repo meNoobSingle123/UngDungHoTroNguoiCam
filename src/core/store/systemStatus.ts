@@ -51,6 +51,19 @@ export function registerSettingsPersistListener(
   persistListener = listener;
 }
 
+export interface HistoryPersistListener {
+  onAdd: (entry: ConversationEntry) => void;
+  onClear: () => void;
+}
+
+let historyPersistListener: HistoryPersistListener | null = null;
+
+export function registerHistoryPersistListener(
+  listener: HistoryPersistListener | null
+): void {
+  historyPersistListener = listener;
+}
+
 function notifyPersist(state: SystemStoreState): void {
   persistListener?.({
     fontLevel: state.fontLevel,
@@ -250,12 +263,20 @@ export const useSystemStore = create<SystemStoreState>((set, get) => ({
           : { isLoggedIn: false, provider: 'guest', syncStatus: 'offline' },
       };
     }),
-  addHistoryEntry: (speaker, text, tMs = Date.now()) =>
+  addHistoryEntry: (speaker, text, tMs = Date.now()) => {
+    const entry: ConversationEntry = {
+      id: `${tMs}-${get().history.length}`,
+      speaker,
+      text,
+      tMs,
+    };
     set((s) => ({
-      history: [
-        ...s.history,
-        { id: `${tMs}-${s.history.length}`, speaker, text, tMs },
-      ],
-    })),
-  clearHistory: () => set({ history: [] }),
+      history: [...s.history, entry],
+    }));
+    historyPersistListener?.onAdd(entry);
+  },
+  clearHistory: () => {
+    set({ history: [] });
+    historyPersistListener?.onClear();
+  },
 }));
