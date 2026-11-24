@@ -71,6 +71,11 @@ export const VI_STRINGS = {
     correctionSpeech: 'Xin lỗi, máy vừa nhận diện nhầm, xin đợi tôi làm lại nhé!',
     unmatchedPrompt: 'Chưa khớp mẫu câu, xin kiểm tra lại các từ bên dưới',
     closeButton: 'Đóng',
+    statusIdle: 'Chờ nhận diện',
+    statusCapturing: 'Đang nhận diện...',
+    noHandHint: 'Đưa tay vào khung hình',
+    handDetected: 'Phát hiện tay',
+    transcriptEmpty: 'Chưa nhận được từ nào',
   },
   communicate: {
     emptyHistory: 'Chạm câu nhanh hoặc chọn cách giao tiếp bên dưới.',

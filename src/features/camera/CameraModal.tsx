@@ -1,10 +1,16 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import type { RecognizerEngine, RecognizerEvent } from '@sign/recognizer-contract';
 import type { SentenceModifier } from '@sign/sentence-builder';
 import { getWordDisplayText } from '@sign/sign-ui';
 import { SignCameraScreen } from '@sign/sign-ui/camera-screen';
+import {
+  hapticLight,
+  hapticSuccess,
+  hapticWarning,
+} from '../../core/haptics/hapticFeedback.ts';
 import { VI_STRINGS } from '../../core/i18n/vi.ts';
 import { useSystemStore } from '../../core/store/systemStatus.ts';
 import { AppText, useAppTheme } from '../../core/theme/ThemeProvider.tsx';
@@ -42,6 +48,13 @@ function renderDevPanel(engine: RecognizerEngine): React.ReactNode {
   return null;
 }
 
+/** Icon name for modifier pills */
+const MODIFIER_ICONS: Record<SentenceModifier, React.ComponentProps<typeof Ionicons>['name']> = {
+  none: 'chatbubble-outline',
+  question: 'help-circle-outline',
+  urgent: 'alert-circle-outline',
+};
+
 export interface CameraModalProps {
   visible: boolean;
   onClose: () => void;
@@ -52,6 +65,7 @@ export function CameraModal({
   onClose,
 }: CameraModalProps): React.ReactElement {
   const theme = useAppTheme();
+  const highContrast = theme.isHighContrast;
   const speechRate = useSystemStore((s) => s.speechRate);
   const history = useSystemStore((s) => s.history);
   const addHistoryEntry = useSystemStore((s) => s.addHistoryEntry);
@@ -97,6 +111,7 @@ export function CameraModal({
   }, [engine, flow, visible]);
 
   const handleToggleCapture = () => {
+    hapticLight();
     const t = Date.now();
     if (snapshot.phase === 'capturing' || snapshot.phase === 'unmatched_review') {
       setSnapshot(flow.finishCapture(modifier, t));
@@ -106,64 +121,99 @@ export function CameraModal({
   };
 
   const canCorrect = flow.canCorrectAt(nowMs);
+  const isCapturing = snapshot.phase === 'capturing' || snapshot.phase === 'unmatched_review';
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <SafeAreaView style={[styles.root, { backgroundColor: theme.colors.bg }]}>
+      <SafeAreaView style={[styles.root, { backgroundColor: highContrast ? theme.colors.bg : '#F8FAFC' }]}>
+        {/* ─── Header ─── */}
         <View
           style={[
             styles.header,
             {
-              paddingHorizontal: theme.spacing.md,
+              paddingHorizontal: theme.spacing.lg,
               paddingVertical: theme.spacing.sm,
-              borderBottomColor: theme.colors.border,
+              borderBottomColor: highContrast ? theme.colors.border : '#E2E8F0',
+              backgroundColor: highContrast ? theme.colors.surface : '#FFFFFF',
             },
           ]}
         >
-          <AppText variant="title" bold>
-            {VI_STRINGS.camera.title}
-          </AppText>
+          <View style={styles.headerLeft}>
+            <View
+              style={[
+                styles.headerIconCircle,
+                { backgroundColor: highContrast ? theme.colors.bg : '#EEF2FF' },
+              ]}
+            >
+              <Ionicons name="hand-right" size={18} color={theme.colors.primary} />
+            </View>
+            <AppText variant="title" bold>
+              {VI_STRINGS.camera.title}
+            </AppText>
+          </View>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={VI_STRINGS.camera.closeButton}
             onPress={onClose}
             style={[
-              styles.smallBtn,
+              styles.closeCircle,
               {
-                minHeight: theme.dimensions.minTouchTarget,
-                borderRadius: theme.radii.button,
-                backgroundColor: theme.colors.surface,
-                borderColor: theme.colors.border,
+                backgroundColor: highContrast ? theme.colors.bg : '#F1F5F9',
               },
             ]}
           >
-            <AppText variant="label" bold>
-              {VI_STRINGS.camera.closeButton}
-            </AppText>
+            <Ionicons name="close" size={22} color={theme.colors.text} />
           </Pressable>
         </View>
 
-        <ScrollView contentContainerStyle={{ padding: theme.spacing.md, gap: theme.spacing.md, flexGrow: 1 }}>
+        <ScrollView
+          contentContainerStyle={{
+            padding: theme.spacing.lg,
+            gap: theme.spacing.md,
+            flexGrow: 1,
+          }}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* ─── Người kia vừa nói ─── */}
           {latestOther ? (
             <View
-              testID="camera-other-pinned"
               style={[
-                styles.panel,
+                styles.otherSaidCard,
                 {
-                  backgroundColor: theme.colors.surface,
-                  borderColor: theme.colors.primary,
-                  borderRadius: theme.radii.card,
+                  backgroundColor: highContrast ? theme.colors.surface : '#EFF6FF',
+                  borderColor: highContrast ? theme.colors.primary : '#BFDBFE',
+                  borderRadius: theme.radii.subCard,
                   padding: theme.spacing.sm,
                 },
               ]}
             >
-              <AppText variant="label" bold color={theme.colors.primary}>
+              <Ionicons name="chatbubble-ellipses" size={16} color={theme.colors.primary} />
+              <AppText
+                testID="camera-other-pinned"
+                variant="label"
+                bold
+                color={theme.colors.primary}
+                style={{ flex: 1 }}
+              >
                 {VI_STRINGS.camera.otherSaidPrefix} {latestOther.text}
               </AppText>
             </View>
           ) : null}
 
-          <View style={styles.cameraBox}>
+          {/* ─── Camera View ─── */}
+          <View
+            style={[
+              styles.cameraBox,
+              {
+                borderRadius: theme.radii.card,
+                shadowColor: '#0F172A',
+                shadowOffset: { width: 0, height: 6 },
+                shadowOpacity: 0.08,
+                shadowRadius: 16,
+                elevation: 4,
+              },
+            ]}
+          >
             <SignCameraScreen
               engine={engine}
               active={visible && snapshot.phase === 'capturing'}
@@ -176,20 +226,24 @@ export function CameraModal({
             />
           </View>
 
+          {/* ─── Câu đang ghép ─── */}
           <View
             style={[
-              styles.panel,
+              styles.composingPanel,
               {
-                backgroundColor: theme.colors.surface,
-                borderColor: theme.colors.border,
+                backgroundColor: highContrast ? theme.colors.surface : '#FFFFFF',
+                borderColor: highContrast ? theme.colors.border : 'rgba(226, 232, 240, 0.8)',
                 borderRadius: theme.radii.card,
                 padding: theme.spacing.md,
               },
             ]}
           >
-            <AppText variant="label" bold color={theme.colors.textMuted}>
-              {VI_STRINGS.camera.composingLabel}
-            </AppText>
+            <View style={styles.composingHeader}>
+              <Ionicons name="text-outline" size={16} color={theme.colors.textMuted} />
+              <AppText variant="label" bold color={theme.colors.textMuted}>
+                {VI_STRINGS.camera.composingLabel}
+              </AppText>
+            </View>
 
             <View style={styles.chipsRow}>
               {snapshot.composingWords.length === 0 ? (
@@ -202,7 +256,10 @@ export function CameraModal({
                     key={`${item.word}-${item.tMs}-${idx}`}
                     accessibilityRole="button"
                     accessibilityLabel={`${VI_STRINGS.cards.deleteButton} ${getWordDisplayText(item.word)}`}
-                    onPress={() => setSnapshot(flow.removeWordAt(idx))}
+                    onPress={() => {
+                      hapticLight();
+                      setSnapshot(flow.removeWordAt(idx));
+                    }}
                     style={[
                       styles.wordChip,
                       {
@@ -221,11 +278,15 @@ export function CameraModal({
             </View>
 
             {snapshot.notice ? (
-              <AppText variant="body" bold color={theme.colors.warning}>
-                {snapshot.notice}
-              </AppText>
+              <View style={styles.noticeRow}>
+                <Ionicons name="information-circle" size={16} color={theme.colors.warning} />
+                <AppText variant="body" bold color={theme.colors.warning} style={{ flex: 1 }}>
+                  {snapshot.notice}
+                </AppText>
+              </View>
             ) : null}
 
+            {/* Modifier pills */}
             <View style={styles.chipsRow}>
               {(['none', 'question', 'urgent'] as const).map((mod) => {
                 const active = modifier === mod;
@@ -236,18 +297,28 @@ export function CameraModal({
                     accessibilityRole="button"
                     accessibilityLabel={label}
                     testID={`modifier-${mod}`}
-                    onPress={() => setModifier(mod)}
+                    onPress={() => {
+                      hapticLight();
+                      setModifier(mod);
+                    }}
                     style={[
-                      styles.wordChip,
+                      styles.modifierPill,
                       {
                         minHeight: theme.dimensions.minTouchTarget,
                         borderRadius: theme.radii.chip,
-                        backgroundColor: active ? theme.colors.primary : theme.colors.bg,
+                        backgroundColor: active
+                          ? theme.colors.primary
+                          : highContrast ? theme.colors.bg : '#F8FAFC',
                         borderWidth: 1,
-                        borderColor: theme.colors.border,
+                        borderColor: active ? theme.colors.primary : (highContrast ? theme.colors.border : '#E2E8F0'),
                       },
                     ]}
                   >
+                    <Ionicons
+                      name={MODIFIER_ICONS[mod]}
+                      size={15}
+                      color={active ? theme.colors.onPrimary : theme.colors.textMuted}
+                    />
                     <AppText
                       variant="label"
                       bold
@@ -260,25 +331,43 @@ export function CameraModal({
               })}
             </View>
 
+            {/* Reviewing state */}
             {snapshot.phase === 'reviewing' && snapshot.pendingSentence ? (
-              <View style={{ gap: theme.spacing.sm }}>
-                <AppText variant="body" bold color={theme.colors.primary}>
-                  {VI_STRINGS.camera.reviewingPrefix} {snapshot.pendingSentence}
-                </AppText>
+              <View
+                style={[
+                  styles.reviewingBox,
+                  {
+                    backgroundColor: highContrast ? theme.colors.bg : '#EFF6FF',
+                    borderColor: highContrast ? theme.colors.primary : '#BFDBFE',
+                    borderRadius: theme.radii.subCard,
+                    padding: theme.spacing.sm,
+                  },
+                ]}
+              >
+                <View style={styles.reviewingRow}>
+                  <Ionicons name="time-outline" size={16} color={theme.colors.primary} />
+                  <AppText variant="body" bold color={theme.colors.primary} style={{ flex: 1 }}>
+                    {VI_STRINGS.camera.reviewingPrefix} {snapshot.pendingSentence}
+                  </AppText>
+                </View>
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={VI_STRINGS.camera.cancelReviewButton}
-                  onPress={() => setSnapshot(flow.cancelReview())}
+                  onPress={() => {
+                    hapticWarning();
+                    setSnapshot(flow.cancelReview());
+                  }}
                   style={[
-                    styles.actionBtn,
+                    styles.cancelReviewBtn,
                     {
-                      minHeight: theme.dimensions.primaryActionMinHeight,
+                      minHeight: theme.dimensions.minTouchTarget,
                       borderRadius: theme.radii.button,
                       backgroundColor: theme.colors.danger,
                     },
                   ]}
                 >
-                  <AppText variant="body" bold color={theme.colors.onDanger}>
+                  <Ionicons name="close-circle" size={16} color={theme.colors.onDanger} />
+                  <AppText variant="label" bold color={theme.colors.onDanger}>
                     {VI_STRINGS.camera.cancelReviewButton}
                   </AppText>
                 </Pressable>
@@ -286,27 +375,39 @@ export function CameraModal({
             ) : null}
           </View>
 
+          {/* ─── Control Buttons ─── */}
           <View style={styles.controlsRow}>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={VI_STRINGS.camera.correctButton}
               disabled={!canCorrect}
               onPress={() => {
+                hapticWarning();
                 flow.correctLastSentence(Date.now());
                 setSnapshot(flow.getSnapshot());
               }}
-              style={[
-                styles.actionBtn,
+              style={({ pressed }) => [
+                styles.controlBtn,
                 {
                   flex: 1,
                   minHeight: theme.dimensions.primaryActionMinHeight,
                   borderRadius: theme.radii.button,
-                  backgroundColor: canCorrect ? theme.colors.warning : theme.colors.surface,
+                  backgroundColor: canCorrect
+                    ? theme.colors.warning
+                    : highContrast ? theme.colors.surface : '#F8FAFC',
                   borderWidth: 1,
-                  borderColor: theme.colors.border,
+                  borderColor: canCorrect
+                    ? theme.colors.warning
+                    : highContrast ? theme.colors.border : '#E2E8F0',
+                  opacity: pressed && canCorrect ? 0.88 : 1,
                 },
               ]}
             >
+              <Ionicons
+                name="arrow-undo"
+                size={18}
+                color={canCorrect ? theme.colors.onPrimary : theme.colors.textMuted}
+              />
               <AppText
                 variant="label"
                 bold
@@ -319,23 +420,39 @@ export function CameraModal({
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={
-                snapshot.phase === 'capturing'
+                isCapturing
                   ? VI_STRINGS.camera.stopButton
                   : VI_STRINGS.camera.startButton
               }
               onPress={handleToggleCapture}
-              style={[
-                styles.actionBtn,
+              style={({ pressed }) => [
+                styles.controlBtn,
+                styles.primaryControlBtn,
                 {
                   flex: 1.4,
                   minHeight: theme.dimensions.primaryActionMinHeight,
                   borderRadius: theme.radii.button,
-                  backgroundColor: theme.colors.primary,
+                  backgroundColor: isCapturing ? theme.colors.danger : theme.colors.primary,
+                  opacity: pressed ? 0.9 : 1,
+                  shadowColor: isCapturing ? '#B91C1C' : '#1D4ED8',
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.25,
+                  shadowRadius: 10,
+                  elevation: 4,
                 },
               ]}
             >
-              <AppText variant="body" bold color={theme.colors.onPrimary}>
-                {snapshot.phase === 'capturing' || snapshot.phase === 'unmatched_review'
+              <Ionicons
+                name={isCapturing ? 'stop-circle' : 'play'}
+                size={20}
+                color={isCapturing ? theme.colors.onDanger : theme.colors.onPrimary}
+              />
+              <AppText
+                variant="body"
+                bold
+                color={isCapturing ? theme.colors.onDanger : theme.colors.onPrimary}
+              >
+                {isCapturing
                   ? VI_STRINGS.camera.stopButton
                   : VI_STRINGS.camera.startButton}
               </AppText>
@@ -344,19 +461,24 @@ export function CameraModal({
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={VI_STRINGS.camera.dropWordButton}
-              onPress={() => setSnapshot(flow.dropLastWord())}
-              style={[
-                styles.actionBtn,
+              onPress={() => {
+                hapticLight();
+                setSnapshot(flow.dropLastWord());
+              }}
+              style={({ pressed }) => [
+                styles.controlBtn,
                 {
                   flex: 1,
                   minHeight: theme.dimensions.primaryActionMinHeight,
                   borderRadius: theme.radii.button,
-                  backgroundColor: theme.colors.surface,
+                  backgroundColor: highContrast ? theme.colors.surface : '#F8FAFC',
                   borderWidth: 1,
-                  borderColor: theme.colors.border,
+                  borderColor: highContrast ? theme.colors.border : '#E2E8F0',
+                  opacity: pressed ? 0.88 : 1,
                 },
               ]}
             >
+              <Ionicons name="backspace-outline" size={18} color={theme.colors.text} />
               <AppText variant="label" bold>
                 {VI_STRINGS.camera.dropWordButton}
               </AppText>
@@ -378,20 +500,48 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     borderBottomWidth: 1,
   },
-  smallBtn: {
-    paddingHorizontal: 14,
-    borderWidth: 1,
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  headerIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  closeCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  otherSaidCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderWidth: 1,
+  },
   cameraBox: {
-    minHeight: 300,
-    borderRadius: 16,
+    minHeight: 280,
     overflow: 'hidden',
   },
-  panel: {
+  composingPanel: {
     borderWidth: 1,
-    gap: 8,
+    gap: 10,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  composingHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   chipsRow: {
     flexDirection: 'row',
@@ -403,14 +553,45 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  modifierPill: {
+    flexDirection: 'row',
+    paddingHorizontal: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 5,
+  },
+  noticeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  reviewingBox: {
+    borderWidth: 1,
+    gap: 8,
+  },
+  reviewingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  cancelReviewBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
   controlsRow: {
     flexDirection: 'row',
     gap: 8,
   },
-  actionBtn: {
+  controlBtn: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
+    gap: 4,
+  },
+  primaryControlBtn: {
+    // Intentionally empty — dynamic styles via inline style
   },
 });
 

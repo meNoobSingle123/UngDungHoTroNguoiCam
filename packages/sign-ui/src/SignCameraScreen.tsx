@@ -56,13 +56,28 @@ export function SignCameraScreen({
     };
   }, [engine, active, facing]);
 
+  /** User-friendly status label */
+  const statusLabel = snapshot.handPresent
+    ? `${snapshot.fps} FPS`
+    : 'Đưa tay vào khung hình';
+
+  /** State indicator dot color */
+  const stateDotColor = snapshot.state === 'error'
+    ? '#EF4444'
+    : snapshot.handPresent
+      ? '#22C55E'
+      : '#A1A1AA';
+
   return (
     <View style={[styles.container, style as ViewStyle]}>
       <View style={styles.cameraStage}>
         <View style={styles.topBar}>
-          <Text style={styles.statusText}>
-            {snapshot.state.toUpperCase()} · {snapshot.handPresent ? `${snapshot.fps} FPS` : 'Không thấy tay'}
-          </Text>
+          <View style={styles.statusRow}>
+            <View style={[styles.stateDot, { backgroundColor: stateDotColor }]} />
+            <Text style={styles.statusText}>
+              {statusLabel}
+            </Text>
+          </View>
 
           {snapshot.showMockBadge ? (
             <View style={styles.mockBadge} testID="mock-badge">
@@ -105,14 +120,18 @@ export function SignCameraScreen({
       <View style={styles.transcriptBox}>
         <View style={styles.transcriptHeader}>
           <Text style={styles.transcriptLabel}>Câu đã nhận:</Text>
-          <Pressable onPress={() => session.clearWords()} testID="clear-words-btn">
+          <Pressable
+            onPress={() => session.clearWords()}
+            testID="clear-words-btn"
+            style={styles.clearBtn}
+          >
             <Text style={styles.clearText}>Xóa</Text>
           </Pressable>
         </View>
         <Text style={styles.transcriptWords} testID="locked-words-text">
           {snapshot.recognizedWords.length > 0
             ? snapshot.recognizedWords.map((item) => getWordDisplayText(item.word)).join(' ')
-            : 'Chưa có từ nào được khóa'}
+            : 'Chưa nhận được từ nào'}
         </Text>
       </View>
 
@@ -124,14 +143,14 @@ export function SignCameraScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#09090B',
-    padding: 16,
-    gap: 12,
+    backgroundColor: '#0C0C0E',
+    padding: 14,
+    gap: 10,
   },
   cameraStage: {
     flex: 1,
-    borderRadius: 16,
-    backgroundColor: '#18181B',
+    borderRadius: 14,
+    backgroundColor: '#1A1A1E',
     padding: 14,
     justifyContent: 'space-between',
   },
@@ -140,10 +159,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  stateDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
   statusText: {
     color: '#D4D4D8',
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 13,
+    fontWeight: '500',
   },
   mockBadge: {
     backgroundColor: '#F59E0B',
@@ -153,7 +182,7 @@ const styles = StyleSheet.create({
   },
   mockBadgeText: {
     color: '#18181B',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '800',
   },
   candidateBanner: {
@@ -202,8 +231,8 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   transcriptBox: {
-    backgroundColor: '#18181B',
-    borderRadius: 14,
+    backgroundColor: '#1A1A1E',
+    borderRadius: 12,
     padding: 14,
     gap: 6,
   },
@@ -216,6 +245,13 @@ const styles = StyleSheet.create({
     color: '#A1A1AA',
     fontSize: 12,
     fontWeight: '600',
+    letterSpacing: 0.3,
+  },
+  clearBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+    backgroundColor: 'rgba(96, 165, 250, 0.1)',
   },
   clearText: {
     color: '#60A5FA',
@@ -224,8 +260,9 @@ const styles = StyleSheet.create({
   },
   transcriptWords: {
     color: '#FAFAFA',
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
+    lineHeight: 28,
   },
 });
 

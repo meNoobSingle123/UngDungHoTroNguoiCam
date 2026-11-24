@@ -130,10 +130,11 @@ describe('UI Screens & MockEngine integration (Jest / RNTL)', () => {
 
   test('CameraModal displays latest hearing-person sentence and modifier selectors', async () => {
     useSystemStore.getState().addHistoryEntry('other', 'Bạn cần mua gì?');
+    const onClose = jest.fn();
 
     await render(
       <ThemeProvider>
-        <CameraModal visible onClose={() => {}} />
+        <CameraModal visible onClose={onClose} />
       </ThemeProvider>
     );
 
@@ -142,6 +143,10 @@ describe('UI Screens & MockEngine integration (Jest / RNTL)', () => {
     );
     expect(screen.getByTestId('modifier-question')).toBeTruthy();
     expect(screen.getByTestId('modifier-urgent')).toBeTruthy();
+
+    // Close button triggers onClose callback
+    await fireEvent.press(screen.getByLabelText(VI_STRINGS.camera.closeButton));
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   test('ConversationHistoryCard and QuickRepliesBar handle user interaction', async () => {
