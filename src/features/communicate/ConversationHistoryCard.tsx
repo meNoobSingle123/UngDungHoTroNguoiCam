@@ -54,7 +54,7 @@ export function ConversationHistoryCard(): React.ReactElement {
         <View style={styles.headerTitleLeft}>
           <Ionicons name="chatbubbles-outline" size={16} color={theme.colors.primary} />
           <AppText variant="caption" weight="600" color={theme.colors.textMuted}>
-            HỘI THOẠI TRỰC TIẾP
+            1. HỘI THOẠI TRỰC TIẾP
           </AppText>
         </View>
         {isFlipped180 ? (
@@ -338,10 +338,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   dialogueBody: {
-    minHeight: 140,
+    minHeight: 112,
     justifyContent: 'center',
-    gap: 12,
-    paddingVertical: 6,
+    gap: 10,
+    paddingVertical: 4,
   },
   emptyDialogue: {
     alignItems: 'center',

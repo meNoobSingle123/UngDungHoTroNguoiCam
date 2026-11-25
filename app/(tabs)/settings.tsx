@@ -302,7 +302,7 @@ export default function SettingsTab(): React.ReactElement {
 
             <View
               style={[
-                styles.segmentedRow,
+                styles.fontGridRow,
                 {
                   backgroundColor: highContrast ? theme.colors.bg : '#F1F5F9',
                 },
@@ -318,7 +318,7 @@ export default function SettingsTab(): React.ReactElement {
                     accessibilityLabel={label}
                     onPress={() => setFontLevel(lvl)}
                     style={[
-                      styles.segmentBtn,
+                      styles.fontGridBtn,
                       active
                         ? highContrast
                           ? { backgroundColor: theme.colors.primary }
@@ -329,6 +329,7 @@ export default function SettingsTab(): React.ReactElement {
                     <AppText
                       variant="caption"
                       weight={active ? '700' : '500'}
+                      numberOfLines={1}
                       color={
                         active
                           ? highContrast
@@ -1235,6 +1236,22 @@ const styles = StyleSheet.create({
     padding: 3,
     borderRadius: 14,
     gap: 4,
+  },
+  fontGridRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    padding: 4,
+    borderRadius: 14,
+    gap: 4,
+  },
+  fontGridBtn: {
+    flexBasis: '48.5%',
+    flexGrow: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 9,
+    paddingHorizontal: 6,
+    borderRadius: 11,
   },
   segmentBtn: {
     flex: 1,

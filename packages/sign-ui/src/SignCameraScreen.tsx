@@ -13,6 +13,8 @@ declare const __DEV__: boolean | undefined;
 export interface SignCameraScreenProps extends SignCameraViewProps {
   /** Optional dev-only debug panel renderer injected from dev entrypoint when __DEV__ === true. */
   renderDebugPanel?: (engine: RecognizerEngine) => React.ReactNode;
+  /** Hide the internal transcript box when parent screen renders its own sentence composer. */
+  hideTranscript?: boolean;
 }
 
 /**
@@ -24,6 +26,7 @@ export function SignCameraScreen({
   facing,
   style,
   renderDebugPanel,
+  hideTranscript = false,
 }: SignCameraScreenProps): React.ReactElement {
   const isDev = typeof __DEV__ !== 'undefined' && __DEV__ === true;
   const session = useMemo(() => createRecognizerSession(engine, isDev), [engine, isDev]);
@@ -117,23 +120,25 @@ export function SignCameraScreen({
         ) : null}
       </View>
 
-      <View style={styles.transcriptBox}>
-        <View style={styles.transcriptHeader}>
-          <Text style={styles.transcriptLabel}>Câu đã nhận:</Text>
-          <Pressable
-            onPress={() => session.clearWords()}
-            testID="clear-words-btn"
-            style={styles.clearBtn}
-          >
-            <Text style={styles.clearText}>Xóa</Text>
-          </Pressable>
+      {!hideTranscript ? (
+        <View style={styles.transcriptBox}>
+          <View style={styles.transcriptHeader}>
+            <Text style={styles.transcriptLabel}>Câu đã nhận:</Text>
+            <Pressable
+              onPress={() => session.clearWords()}
+              testID="clear-words-btn"
+              style={styles.clearBtn}
+            >
+              <Text style={styles.clearText}>Xóa</Text>
+            </Pressable>
+          </View>
+          <Text style={styles.transcriptWords} testID="locked-words-text">
+            {snapshot.recognizedWords.length > 0
+              ? snapshot.recognizedWords.map((item) => getWordDisplayText(item.word)).join(' ')
+              : 'Chưa nhận được từ nào'}
+          </Text>
         </View>
-        <Text style={styles.transcriptWords} testID="locked-words-text">
-          {snapshot.recognizedWords.length > 0
-            ? snapshot.recognizedWords.map((item) => getWordDisplayText(item.word)).join(' ')
-            : 'Chưa nhận được từ nào'}
-        </Text>
-      </View>
+      ) : null}
 
       {isDev && renderDebugPanel ? renderDebugPanel(engine) : null}
     </View>

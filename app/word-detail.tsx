@@ -207,7 +207,7 @@ export default function WordDetailScreen(): React.ReactElement {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* Banner Từ vựng: Tên từ + Loa phát âm nằm ngay cạnh chữ */}
+        {/* Banner Từ vựng: Hàng trên tên từ + Loa, Hàng dưới nhóm & Lưu thẻ */}
         <View
           style={[
             styles.bannerCard,
@@ -217,53 +217,50 @@ export default function WordDetailScreen(): React.ReactElement {
             },
           ]}
         >
-          <View style={styles.bannerRow}>
-            <View style={styles.bannerLeftCol}>
-              {/* Tên từ vựng + Nút phát âm loa nằm ngay bên cạnh */}
-              <View style={styles.wordTitleRow}>
-                <AppText variant="display" weight="700" color={theme.colors.text}>
-                  {currentWord.vi}
+          <View style={styles.wordTitleRow}>
+            <AppText variant="display" weight="700" color={theme.colors.text} style={{ flex: 1 }}>
+              {currentWord.vi}
+            </AppText>
+
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={VI_STRINGS.dictionary.speakWordButton}
+              onPress={() => speakVietnamese(currentWord.vi, { rate: isSlowMotion ? 0.7 : speechRate })}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              style={({ pressed }) => [
+                styles.speakerBtn,
+                {
+                  backgroundColor: highContrast ? theme.colors.bg : '#EFF6FF',
+                  borderColor: highContrast ? theme.colors.border : '#BFDBFE',
+                  opacity: pressed ? 0.7 : 1,
+                },
+              ]}
+            >
+              <Ionicons name="volume-high" size={22} color={theme.colors.primary} />
+            </Pressable>
+          </View>
+
+          <View style={styles.bannerFooterRow}>
+            <View style={styles.badgeRow}>
+              <View
+                style={[
+                  styles.tagPill,
+                  { backgroundColor: highContrast ? theme.colors.bg : '#EFF6FF' },
+                ]}
+              >
+                <AppText variant="caption" weight="600" color={theme.colors.primary}>
+                  {GROUP_LABELS[currentWord.group] || currentWord.group}
                 </AppText>
-
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={VI_STRINGS.dictionary.speakWordButton}
-                  onPress={() => speakVietnamese(currentWord.vi, { rate: isSlowMotion ? 0.7 : speechRate })}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                  style={({ pressed }) => [
-                    styles.speakerBtn,
-                    {
-                      backgroundColor: highContrast ? theme.colors.bg : '#EFF6FF',
-                      borderColor: highContrast ? theme.colors.border : '#BFDBFE',
-                      opacity: pressed ? 0.7 : 1,
-                    },
-                  ]}
-                >
-                  <Ionicons name="volume-high" size={22} color={theme.colors.primary} />
-                </Pressable>
               </View>
-
-              <View style={styles.badgeRow}>
-                <View
-                  style={[
-                    styles.tagPill,
-                    { backgroundColor: highContrast ? theme.colors.bg : '#EFF6FF' },
-                  ]}
-                >
-                  <AppText variant="caption" weight="600" color={theme.colors.primary}>
-                    {GROUP_LABELS[currentWord.group] || currentWord.group}
-                  </AppText>
-                </View>
-                <View
-                  style={[
-                    styles.tagPill,
-                    { backgroundColor: highContrast ? theme.colors.bg : '#F1F5F9' },
-                  ]}
-                >
-                  <AppText variant="caption" weight="500" color={theme.colors.textMuted}>
-                    #{currentWord.id}
-                  </AppText>
-                </View>
+              <View
+                style={[
+                  styles.tagPill,
+                  { backgroundColor: highContrast ? theme.colors.bg : '#F1F5F9' },
+                ]}
+              >
+                <AppText variant="caption" weight="500" color={theme.colors.textMuted}>
+                  #{currentWord.id}
+                </AppText>
               </View>
             </View>
 
@@ -282,7 +279,7 @@ export default function WordDetailScreen(): React.ReactElement {
                 },
               ]}
             >
-              <Ionicons name="bookmark-outline" size={18} color={theme.colors.primary} />
+              <Ionicons name="bookmark-outline" size={16} color={theme.colors.primary} />
               <AppText variant="caption" weight="600" color={theme.colors.primary}>
                 {VI_STRINGS.dictionary.saveToCardsButton}
               </AppText>
@@ -315,7 +312,7 @@ export default function WordDetailScreen(): React.ReactElement {
           ]}
         >
           <View style={styles.cardHeaderRow}>
-            <View style={styles.cardHeaderLeft}>
+            <View style={[styles.cardHeaderLeft, { flex: 1 }]}>
               <View
                 style={[
                   styles.headerIconCircle,
@@ -324,7 +321,7 @@ export default function WordDetailScreen(): React.ReactElement {
               >
                 <Ionicons name="eye-outline" size={16} color={theme.colors.primary} />
               </View>
-              <AppText variant="subhead" weight="700" color={theme.colors.text}>
+              <AppText variant="subhead" weight="700" color={theme.colors.text} style={{ flexShrink: 1 }}>
                 {VI_STRINGS.dictionary.videoSectionTitle}
               </AppText>
             </View>
@@ -335,8 +332,8 @@ export default function WordDetailScreen(): React.ReactElement {
                 { backgroundColor: highContrast ? theme.colors.bg : '#F1F5F9' },
               ]}
             >
-              <AppText variant="caption" weight="600" color={theme.colors.textMuted}>
-                Góc nhìn chính diện
+              <AppText variant="caption" weight="600" color={theme.colors.textMuted} numberOfLines={1}>
+                Chính diện
               </AppText>
             </View>
           </View>
@@ -484,16 +481,6 @@ export default function WordDetailScreen(): React.ReactElement {
                     {VI_STRINGS.dictionary.handshapeLabel}
                   </AppText>
                 </View>
-                <View
-                  style={[
-                    styles.compMiniTag,
-                    { backgroundColor: highContrast ? theme.colors.bg : '#F8FAFC' },
-                  ]}
-                >
-                  <AppText variant="caption" weight="500" color={theme.colors.textMuted}>
-                    Dạng bàn tay
-                  </AppText>
-                </View>
               </View>
               <AppText variant="body" color={theme.colors.text} style={styles.compDescText}>
                 {currentDetail.handshape}
@@ -524,16 +511,6 @@ export default function WordDetailScreen(): React.ReactElement {
                   </View>
                   <AppText variant="body" weight="700" color={theme.colors.text}>
                     {VI_STRINGS.dictionary.locationLabel}
-                  </AppText>
-                </View>
-                <View
-                  style={[
-                    styles.compMiniTag,
-                    { backgroundColor: highContrast ? theme.colors.bg : '#F8FAFC' },
-                  ]}
-                >
-                  <AppText variant="caption" weight="500" color={theme.colors.textMuted}>
-                    Không gian
                   </AppText>
                 </View>
               </View>
@@ -568,16 +545,6 @@ export default function WordDetailScreen(): React.ReactElement {
                     {VI_STRINGS.dictionary.movementLabel}
                   </AppText>
                 </View>
-                <View
-                  style={[
-                    styles.compMiniTag,
-                    { backgroundColor: highContrast ? theme.colors.bg : '#F8FAFC' },
-                  ]}
-                >
-                  <AppText variant="caption" weight="500" color={theme.colors.textMuted}>
-                    Quỹ đạo
-                  </AppText>
-                </View>
               </View>
               <AppText variant="body" color={theme.colors.text} style={styles.compDescText}>
                 {currentDetail.movement}
@@ -608,16 +575,6 @@ export default function WordDetailScreen(): React.ReactElement {
                   </View>
                   <AppText variant="body" weight="700" color={theme.colors.text}>
                     {VI_STRINGS.dictionary.facialLabel}
-                  </AppText>
-                </View>
-                <View
-                  style={[
-                    styles.compMiniTag,
-                    { backgroundColor: highContrast ? theme.colors.bg : '#F8FAFC' },
-                  ]}
-                >
-                  <AppText variant="caption" weight="500" color={theme.colors.textMuted}>
-                    Thái độ
                   </AppText>
                 </View>
               </View>
@@ -836,24 +793,24 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 20,
     padding: 18,
+    gap: 12,
     shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
     shadowRadius: 12,
     elevation: 3,
   },
-  bannerRow: {
+  bannerFooterRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'space-between',
-  },
-  bannerLeftCol: {
-    gap: 10,
-    flex: 1,
+    flexWrap: 'wrap',
+    gap: 8,
   },
   wordTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     gap: 10,
   },
   speakerBtn: {
@@ -910,6 +867,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: 8,
   },
   cardHeaderLeft: {
     flexDirection: 'row',
@@ -1021,11 +979,6 @@ const styles = StyleSheet.create({
     borderRadius: 11,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  compMiniTag: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
   },
   compDescText: {
     lineHeight: 22,

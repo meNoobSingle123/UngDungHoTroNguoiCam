@@ -143,6 +143,11 @@ describe('UI Screens & MockEngine integration (Jest / RNTL)', () => {
     );
     expect(screen.getByTestId('modifier-question')).toBeTruthy();
     expect(screen.getByTestId('modifier-urgent')).toBeTruthy();
+    // Clear 3-section structure without duplicate transcript box
+    expect(screen.queryByTestId('locked-words-text')).toBeNull();
+    expect(screen.getByText('1. KHUNG CAMERA NHẬN DIỆN')).toBeTruthy();
+    expect(screen.getByText('2. CÂU ĐANG GHÉP & NGỮ ĐIỆU')).toBeTruthy();
+    expect(screen.getByText('3. ĐIỀU KHIỂN')).toBeTruthy();
 
     // Close button triggers onClose callback
     await fireEvent.press(screen.getByLabelText(VI_STRINGS.camera.closeButton));
@@ -255,9 +260,27 @@ describe('UI Screens & MockEngine integration (Jest / RNTL)', () => {
       const speech = require('expo-speech');
       expect(speech.speak).toHaveBeenCalled();
 
-      await fireEvent.press(screen.getByTestId('presenter-close-btn'));
+    await fireEvent.press(screen.getByTestId('presenter-close-btn'));
       expect(screen.queryByTestId('presenter-text')).toBeNull();
     }
+
+    await unmount();
+  });
+
+  test('DictionaryTab filters words by group pill cleanly', async () => {
+    const { unmount } = await render(
+      <ThemeProvider>
+        <DictionaryTab />
+      </ThemeProvider>
+    );
+
+    expect(screen.getByText('NGUYÊN MẪU THAM CHIẾU (20 TỪ)')).toBeTruthy();
+    await fireEvent.press(screen.getByTestId('dict-group-y_te'));
+    expect(screen.queryByText('NGUYÊN MẪU THAM CHIẾU (20 TỪ)')).toBeNull();
+    expect(screen.getByText('Đau')).toBeTruthy();
+
+    await fireEvent.press(screen.getByTestId('dict-group-all'));
+    expect(screen.getByText('NGUYÊN MẪU THAM CHIẾU (20 TỪ)')).toBeTruthy();
 
     await unmount();
   });

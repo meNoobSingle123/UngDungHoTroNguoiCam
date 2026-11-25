@@ -63,13 +63,13 @@ export default function CommunicateTab(): React.ReactElement {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Khung Hội thoại Tương tác tách rời */}
+        {/* Mục 1: Khung Hội thoại Trực tiếp */}
         <ConversationHistoryCard />
 
-        {/* Dải Câu Phản hồi Nhanh tách rời */}
+        {/* Mục 2: Dải Câu Phản hồi Nhanh */}
         <QuickRepliesBar onSelectReply={speakAndRecord} />
 
-        {/* Khối Lựa chọn Cách giao tiếp */}
+        {/* Mục 3: Chọn cách giao tiếp */}
         <View style={styles.sectionWrapper}>
           <AppText
             variant="caption"
@@ -77,10 +77,10 @@ export default function CommunicateTab(): React.ReactElement {
             color={theme.colors.textMuted}
             style={styles.sectionLabel}
           >
-            CÁCH GIAO TIẾP
+            3. CHỌN CÁCH GIAO TIẾP
           </AppText>
 
-          {/* Hero Card: Cử chỉ của tôi (Camera nhận diện) */}
+          {/* Lựa chọn 1: Quay cử chỉ tay */}
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={VI_STRINGS.communicate.actions.mySign}
@@ -96,7 +96,7 @@ export default function CommunicateTab(): React.ReactElement {
           >
             <View style={styles.heroLeft}>
               <View style={styles.heroIconBadge}>
-                <Ionicons name="hand-right" size={24} color={theme.colors.onPrimary} />
+                <Ionicons name="hand-right" size={22} color={theme.colors.onPrimary} />
               </View>
               <View style={styles.heroTextCol}>
                 <AppText variant="subhead" weight="700" color={theme.colors.onPrimary}>
@@ -116,7 +116,7 @@ export default function CommunicateTab(): React.ReactElement {
             </View>
           </Pressable>
 
-          {/* 2 Nút hành động đồng hành: Gõ chữ & Người đối diện nói */}
+          {/* Lựa chọn 2 & 3: Nhập phím & Người kia nói */}
           <View style={styles.twoActionRow}>
             <Pressable
               accessibilityRole="button"
@@ -184,7 +184,7 @@ export default function CommunicateTab(): React.ReactElement {
                 color={theme.colors.textMuted}
                 style={styles.centerText}
               >
-                Người đối diện nói
+                Đưa máy người kia gõ
               </AppText>
             </Pressable>
           </View>
@@ -218,8 +218,8 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 16,
     paddingTop: 8,
-    paddingBottom: 90,
-    gap: 16,
+    paddingBottom: 112,
+    gap: 14,
   },
   sectionWrapper: {
     gap: 10,

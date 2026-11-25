@@ -27,7 +27,7 @@ export function QuickRepliesBar({ onSelectReply }: QuickRepliesBarProps): React.
         color={theme.colors.textMuted}
         style={styles.sectionLabel}
       >
-        CÂU PHẢN HỒI NHANH
+        2. CÂU PHẢN HỒI NHANH
       </AppText>
 
       <ScrollView

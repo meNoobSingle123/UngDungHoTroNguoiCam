@@ -2,6 +2,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import {
   FlatList,
   Pressable,
+  ScrollView,
   StyleSheet,
   TextInput,
   View,
@@ -37,17 +38,20 @@ export default function DictionaryTab(): React.ReactElement {
   const highContrast = theme.isHighContrast;
 
   const [query, setQuery] = useState('');
+  const [selectedGroup, setSelectedGroup] = useState<string | undefined>(undefined);
 
   const filteredWords = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return SPEC_WORDS;
-    return SPEC_WORDS.filter(
-      (w) =>
+    return SPEC_WORDS.filter((w) => {
+      if (selectedGroup && w.group !== selectedGroup) return false;
+      if (!q) return true;
+      return (
         w.vi.toLowerCase().includes(q) ||
         w.id.toLowerCase().includes(q) ||
         (GROUP_LABELS[w.group] || '').toLowerCase().includes(q)
-    );
-  }, [query]);
+      );
+    });
+  }, [query, selectedGroup]);
 
   const openWordDetail = useCallback((item: SpecWord) => {
     router.push({
@@ -168,6 +172,81 @@ export default function DictionaryTab(): React.ReactElement {
           )}
         </View>
 
+        {/* Bộ lọc theo nhóm từ */}
+        <View style={styles.filterWrapper}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterScroll}
+          >
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={VI_STRINGS.cards.allFilter}
+              testID="dict-group-all"
+              onPress={() => setSelectedGroup(undefined)}
+              style={[
+                styles.filterPill,
+                {
+                  backgroundColor: !selectedGroup
+                    ? theme.colors.primary
+                    : highContrast
+                      ? theme.colors.surface
+                      : '#FFFFFF',
+                  borderColor: !selectedGroup
+                    ? theme.colors.primary
+                    : highContrast
+                      ? theme.colors.border
+                      : '#E2E8F0',
+                },
+              ]}
+            >
+              <AppText
+                variant="caption"
+                weight="600"
+                color={!selectedGroup ? theme.colors.onPrimary : theme.colors.text}
+              >
+                {VI_STRINGS.cards.allFilter}
+              </AppText>
+            </Pressable>
+
+            {Object.entries(GROUP_LABELS).map(([key, label]) => {
+              const active = selectedGroup === key;
+              return (
+                <Pressable
+                  key={key}
+                  accessibilityRole="button"
+                  accessibilityLabel={label}
+                  testID={`dict-group-${key}`}
+                  onPress={() => setSelectedGroup(active ? undefined : key)}
+                  style={[
+                    styles.filterPill,
+                    {
+                      backgroundColor: active
+                        ? theme.colors.primary
+                        : highContrast
+                          ? theme.colors.surface
+                          : '#FFFFFF',
+                      borderColor: active
+                        ? theme.colors.primary
+                        : highContrast
+                          ? theme.colors.border
+                          : '#E2E8F0',
+                    },
+                  ]}
+                >
+                  <AppText
+                    variant="caption"
+                    weight="600"
+                    color={active ? theme.colors.onPrimary : theme.colors.text}
+                  >
+                    {label}
+                  </AppText>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </View>
+
         {/* Số lượng từ vựng hiển thị */}
         <View style={styles.summaryRow}>
           <AppText variant="caption" weight="600" color={theme.colors.textMuted}>
@@ -250,8 +329,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     paddingTop: 4,
   },
+  filterWrapper: {
+    marginVertical: 2,
+  },
+  filterScroll: {
+    gap: 8,
+    alignItems: 'center',
+  },
+  filterPill: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
   listContent: {
-    paddingBottom: 90,
+    paddingBottom: 112,
     gap: 10,
   },
   emptyBox: {

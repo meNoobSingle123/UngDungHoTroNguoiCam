@@ -8,7 +8,6 @@ import { getWordDisplayText } from '@sign/sign-ui';
 import { SignCameraScreen } from '@sign/sign-ui/camera-screen';
 import {
   hapticLight,
-  hapticSuccess,
   hapticWarning,
 } from '../../core/haptics/hapticFeedback.ts';
 import { VI_STRINGS } from '../../core/i18n/vi.ts';
@@ -200,289 +199,309 @@ export function CameraModal({
             </View>
           ) : null}
 
-          {/* ─── Camera View ─── */}
-          <View
-            style={[
-              styles.cameraBox,
-              {
-                borderRadius: theme.radii.card,
-                shadowColor: '#0F172A',
-                shadowOffset: { width: 0, height: 6 },
-                shadowOpacity: 0.08,
-                shadowRadius: 16,
-                elevation: 4,
-              },
-            ]}
-          >
-            <SignCameraScreen
-              engine={engine}
-              active={visible && snapshot.phase === 'capturing'}
-              facing="front"
-              renderDebugPanel={
-                typeof __DEV__ !== 'undefined' && __DEV__ === true
-                  ? renderDevPanel
-                  : undefined
-              }
-            />
-          </View>
-
-          {/* ─── Câu đang ghép ─── */}
-          <View
-            style={[
-              styles.composingPanel,
-              {
-                backgroundColor: highContrast ? theme.colors.surface : '#FFFFFF',
-                borderColor: highContrast ? theme.colors.border : 'rgba(226, 232, 240, 0.8)',
-                borderRadius: theme.radii.card,
-                padding: theme.spacing.md,
-              },
-            ]}
-          >
-            <View style={styles.composingHeader}>
-              <Ionicons name="text-outline" size={16} color={theme.colors.textMuted} />
-              <AppText variant="label" bold color={theme.colors.textMuted}>
-                {VI_STRINGS.camera.composingLabel}
-              </AppText>
-            </View>
-
-            <View style={styles.chipsRow}>
-              {snapshot.composingWords.length === 0 ? (
-                <AppText variant="body" color={theme.colors.textMuted}>
-                  {VI_STRINGS.camera.composingEmpty}
-                </AppText>
-              ) : (
-                snapshot.composingWords.map((item, idx) => (
-                  <Pressable
-                    key={`${item.word}-${item.tMs}-${idx}`}
-                    accessibilityRole="button"
-                    accessibilityLabel={`${VI_STRINGS.cards.deleteButton} ${getWordDisplayText(item.word)}`}
-                    onPress={() => {
-                      hapticLight();
-                      setSnapshot(flow.removeWordAt(idx));
-                    }}
-                    style={[
-                      styles.wordChip,
-                      {
-                        minHeight: theme.dimensions.minTouchTarget,
-                        borderRadius: theme.radii.chip,
-                        backgroundColor: theme.colors.primary,
-                      },
-                    ]}
-                  >
-                    <AppText variant="label" bold color={theme.colors.onPrimary}>
-                      {getWordDisplayText(item.word)} ×
-                    </AppText>
-                  </Pressable>
-                ))
-              )}
-            </View>
-
-            {snapshot.notice ? (
-              <View style={styles.noticeRow}>
-                <Ionicons name="information-circle" size={16} color={theme.colors.warning} />
-                <AppText variant="body" bold color={theme.colors.warning} style={{ flex: 1 }}>
-                  {snapshot.notice}
-                </AppText>
-              </View>
-            ) : null}
-
-            {/* Modifier pills */}
-            <View style={styles.chipsRow}>
-              {(['none', 'question', 'urgent'] as const).map((mod) => {
-                const active = modifier === mod;
-                const label = VI_STRINGS.camera.modifiers[mod];
-                return (
-                  <Pressable
-                    key={mod}
-                    accessibilityRole="button"
-                    accessibilityLabel={label}
-                    testID={`modifier-${mod}`}
-                    onPress={() => {
-                      hapticLight();
-                      setModifier(mod);
-                    }}
-                    style={[
-                      styles.modifierPill,
-                      {
-                        minHeight: theme.dimensions.minTouchTarget,
-                        borderRadius: theme.radii.chip,
-                        backgroundColor: active
-                          ? theme.colors.primary
-                          : highContrast ? theme.colors.bg : '#F8FAFC',
-                        borderWidth: 1,
-                        borderColor: active ? theme.colors.primary : (highContrast ? theme.colors.border : '#E2E8F0'),
-                      },
-                    ]}
-                  >
-                    <Ionicons
-                      name={MODIFIER_ICONS[mod]}
-                      size={15}
-                      color={active ? theme.colors.onPrimary : theme.colors.textMuted}
-                    />
-                    <AppText
-                      variant="label"
-                      bold
-                      color={active ? theme.colors.onPrimary : theme.colors.text}
-                    >
-                      {label}
-                    </AppText>
-                  </Pressable>
-                );
-              })}
-            </View>
-
-            {/* Reviewing state */}
-            {snapshot.phase === 'reviewing' && snapshot.pendingSentence ? (
-              <View
-                style={[
-                  styles.reviewingBox,
-                  {
-                    backgroundColor: highContrast ? theme.colors.bg : '#EFF6FF',
-                    borderColor: highContrast ? theme.colors.primary : '#BFDBFE',
-                    borderRadius: theme.radii.subCard,
-                    padding: theme.spacing.sm,
-                  },
-                ]}
-              >
-                <View style={styles.reviewingRow}>
-                  <Ionicons name="time-outline" size={16} color={theme.colors.primary} />
-                  <AppText variant="body" bold color={theme.colors.primary} style={{ flex: 1 }}>
-                    {VI_STRINGS.camera.reviewingPrefix} {snapshot.pendingSentence}
-                  </AppText>
-                </View>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={VI_STRINGS.camera.cancelReviewButton}
-                  onPress={() => {
-                    hapticWarning();
-                    setSnapshot(flow.cancelReview());
-                  }}
-                  style={[
-                    styles.cancelReviewBtn,
-                    {
-                      minHeight: theme.dimensions.minTouchTarget,
-                      borderRadius: theme.radii.button,
-                      backgroundColor: theme.colors.danger,
-                    },
-                  ]}
-                >
-                  <Ionicons name="close-circle" size={16} color={theme.colors.onDanger} />
-                  <AppText variant="label" bold color={theme.colors.onDanger}>
-                    {VI_STRINGS.camera.cancelReviewButton}
-                  </AppText>
-                </Pressable>
-              </View>
-            ) : null}
-          </View>
-
-          {/* ─── Control Buttons ─── */}
-          <View style={styles.controlsRow}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={VI_STRINGS.camera.correctButton}
-              disabled={!canCorrect}
-              onPress={() => {
-                hapticWarning();
-                flow.correctLastSentence(Date.now());
-                setSnapshot(flow.getSnapshot());
-              }}
-              style={({ pressed }) => [
-                styles.controlBtn,
+          {/* ─── Mục 1: Khung Camera nhận diện ─── */}
+          <View style={styles.sectionBlock}>
+            <AppText variant="caption" weight="600" color={theme.colors.textMuted} style={styles.sectionLabel}>
+              1. KHUNG CAMERA NHẬN DIỆN
+            </AppText>
+            <View
+              style={[
+                styles.cameraBox,
                 {
-                  flex: 1,
-                  minHeight: theme.dimensions.primaryActionMinHeight,
-                  borderRadius: theme.radii.button,
-                  backgroundColor: canCorrect
-                    ? theme.colors.warning
-                    : highContrast ? theme.colors.surface : '#F8FAFC',
-                  borderWidth: 1,
-                  borderColor: canCorrect
-                    ? theme.colors.warning
-                    : highContrast ? theme.colors.border : '#E2E8F0',
-                  opacity: pressed && canCorrect ? 0.88 : 1,
-                },
-              ]}
-            >
-              <Ionicons
-                name="arrow-undo"
-                size={18}
-                color={canCorrect ? theme.colors.onPrimary : theme.colors.textMuted}
-              />
-              <AppText
-                variant="label"
-                bold
-                color={canCorrect ? theme.colors.onPrimary : theme.colors.textMuted}
-              >
-                {VI_STRINGS.camera.correctButton}
-              </AppText>
-            </Pressable>
-
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={
-                isCapturing
-                  ? VI_STRINGS.camera.stopButton
-                  : VI_STRINGS.camera.startButton
-              }
-              onPress={handleToggleCapture}
-              style={({ pressed }) => [
-                styles.controlBtn,
-                styles.primaryControlBtn,
-                {
-                  flex: 1.4,
-                  minHeight: theme.dimensions.primaryActionMinHeight,
-                  borderRadius: theme.radii.button,
-                  backgroundColor: isCapturing ? theme.colors.danger : theme.colors.primary,
-                  opacity: pressed ? 0.9 : 1,
-                  shadowColor: isCapturing ? '#B91C1C' : '#1D4ED8',
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.25,
-                  shadowRadius: 10,
+                  borderRadius: theme.radii.card,
+                  shadowColor: '#0F172A',
+                  shadowOffset: { width: 0, height: 6 },
+                  shadowOpacity: 0.08,
+                  shadowRadius: 16,
                   elevation: 4,
                 },
               ]}
             >
-              <Ionicons
-                name={isCapturing ? 'stop-circle' : 'play'}
-                size={20}
-                color={isCapturing ? theme.colors.onDanger : theme.colors.onPrimary}
+              <SignCameraScreen
+                engine={engine}
+                active={visible && snapshot.phase === 'capturing'}
+                facing="front"
+                hideTranscript
+                renderDebugPanel={
+                  typeof __DEV__ !== 'undefined' && __DEV__ === true
+                    ? renderDevPanel
+                    : undefined
+                }
               />
-              <AppText
-                variant="body"
-                bold
-                color={isCapturing ? theme.colors.onDanger : theme.colors.onPrimary}
-              >
-                {isCapturing
-                  ? VI_STRINGS.camera.stopButton
-                  : VI_STRINGS.camera.startButton}
-              </AppText>
-            </Pressable>
+            </View>
+          </View>
 
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={VI_STRINGS.camera.dropWordButton}
-              onPress={() => {
-                hapticLight();
-                setSnapshot(flow.dropLastWord());
-              }}
-              style={({ pressed }) => [
-                styles.controlBtn,
+          {/* ─── Mục 2: Câu đang ghép & Ngữ điệu ─── */}
+          <View style={styles.sectionBlock}>
+            <AppText variant="caption" weight="600" color={theme.colors.textMuted} style={styles.sectionLabel}>
+              2. CÂU ĐANG GHÉP & NGỮ ĐIỆU
+            </AppText>
+            <View
+              style={[
+                styles.composingPanel,
                 {
-                  flex: 1,
-                  minHeight: theme.dimensions.primaryActionMinHeight,
-                  borderRadius: theme.radii.button,
-                  backgroundColor: highContrast ? theme.colors.surface : '#F8FAFC',
-                  borderWidth: 1,
-                  borderColor: highContrast ? theme.colors.border : '#E2E8F0',
-                  opacity: pressed ? 0.88 : 1,
+                  backgroundColor: highContrast ? theme.colors.surface : '#FFFFFF',
+                  borderColor: highContrast ? theme.colors.border : 'rgba(226, 232, 240, 0.8)',
+                  borderRadius: theme.radii.card,
+                  padding: theme.spacing.md,
                 },
               ]}
             >
-              <Ionicons name="backspace-outline" size={18} color={theme.colors.text} />
-              <AppText variant="label" bold>
-                {VI_STRINGS.camera.dropWordButton}
-              </AppText>
-            </Pressable>
+              <View style={styles.composingHeader}>
+                <Ionicons name="text-outline" size={16} color={theme.colors.textMuted} />
+                <AppText variant="label" bold color={theme.colors.textMuted}>
+                  {VI_STRINGS.camera.composingLabel}
+                </AppText>
+              </View>
+
+              <View style={styles.chipsRow}>
+                {snapshot.composingWords.length === 0 ? (
+                  <AppText variant="body" color={theme.colors.textMuted}>
+                    {VI_STRINGS.camera.composingEmpty}
+                  </AppText>
+                ) : (
+                  snapshot.composingWords.map((item, idx) => (
+                    <Pressable
+                      key={`${item.word}-${item.tMs}-${idx}`}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${VI_STRINGS.cards.deleteButton} ${getWordDisplayText(item.word)}`}
+                      onPress={() => {
+                        hapticLight();
+                        setSnapshot(flow.removeWordAt(idx));
+                      }}
+                      style={[
+                        styles.wordChip,
+                        {
+                          minHeight: theme.dimensions.minTouchTarget,
+                          borderRadius: theme.radii.chip,
+                          backgroundColor: theme.colors.primary,
+                        },
+                      ]}
+                    >
+                      <AppText variant="label" bold color={theme.colors.onPrimary}>
+                        {getWordDisplayText(item.word)} ×
+                      </AppText>
+                    </Pressable>
+                  ))
+                )}
+              </View>
+
+              {snapshot.notice ? (
+                <View style={styles.noticeRow}>
+                  <Ionicons name="information-circle" size={16} color={theme.colors.warning} />
+                  <AppText variant="body" bold color={theme.colors.warning} style={{ flex: 1 }}>
+                    {snapshot.notice}
+                  </AppText>
+                </View>
+              ) : null}
+
+              {/* Ngữ điệu câu: 3 nút nằm đều trên 1 hàng ngang */}
+              <View style={styles.modifierGroup}>
+                <AppText variant="caption" weight="600" color={theme.colors.textMuted}>
+                  Chọn ngữ điệu câu:
+                </AppText>
+                <View style={styles.modifierRow}>
+                  {(['none', 'question', 'urgent'] as const).map((mod) => {
+                    const active = modifier === mod;
+                    const label = VI_STRINGS.camera.modifiers[mod];
+                    return (
+                      <Pressable
+                        key={mod}
+                        accessibilityRole="button"
+                        accessibilityLabel={label}
+                        testID={`modifier-${mod}`}
+                        onPress={() => {
+                          hapticLight();
+                          setModifier(mod);
+                        }}
+                        style={[
+                          styles.modifierPill,
+                          {
+                            minHeight: theme.dimensions.minTouchTarget,
+                            borderRadius: theme.radii.chip,
+                            backgroundColor: active
+                              ? theme.colors.primary
+                              : highContrast ? theme.colors.bg : '#F8FAFC',
+                            borderWidth: 1,
+                            borderColor: active ? theme.colors.primary : (highContrast ? theme.colors.border : '#E2E8F0'),
+                          },
+                        ]}
+                      >
+                        <Ionicons
+                          name={MODIFIER_ICONS[mod]}
+                          size={14}
+                          color={active ? theme.colors.onPrimary : theme.colors.textMuted}
+                        />
+                        <AppText
+                          variant="caption"
+                          bold
+                          numberOfLines={1}
+                          color={active ? theme.colors.onPrimary : theme.colors.text}
+                        >
+                          {label}
+                        </AppText>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </View>
+
+              {/* Reviewing state */}
+              {snapshot.phase === 'reviewing' && snapshot.pendingSentence ? (
+                <View
+                  style={[
+                    styles.reviewingBox,
+                    {
+                      backgroundColor: highContrast ? theme.colors.bg : '#EFF6FF',
+                      borderColor: highContrast ? theme.colors.primary : '#BFDBFE',
+                      borderRadius: theme.radii.subCard,
+                      padding: theme.spacing.sm,
+                    },
+                  ]}
+                >
+                  <View style={styles.reviewingRow}>
+                    <Ionicons name="time-outline" size={16} color={theme.colors.primary} />
+                    <AppText variant="body" bold color={theme.colors.primary} style={{ flex: 1 }}>
+                      {VI_STRINGS.camera.reviewingPrefix} {snapshot.pendingSentence}
+                    </AppText>
+                  </View>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={VI_STRINGS.camera.cancelReviewButton}
+                    onPress={() => {
+                      hapticWarning();
+                      setSnapshot(flow.cancelReview());
+                    }}
+                    style={[
+                      styles.cancelReviewBtn,
+                      {
+                        minHeight: theme.dimensions.minTouchTarget,
+                        borderRadius: theme.radii.button,
+                        backgroundColor: theme.colors.danger,
+                      },
+                    ]}
+                  >
+                    <Ionicons name="close-circle" size={16} color={theme.colors.onDanger} />
+                    <AppText variant="label" bold color={theme.colors.onDanger}>
+                      {VI_STRINGS.camera.cancelReviewButton}
+                    </AppText>
+                  </Pressable>
+                </View>
+              ) : null}
+            </View>
+          </View>
+
+          {/* ─── Mục 3: Điều khiển ─── */}
+          <View style={styles.sectionBlock}>
+            <AppText variant="caption" weight="600" color={theme.colors.textMuted} style={styles.sectionLabel}>
+              3. ĐIỀU KHIỂN
+            </AppText>
+            <View style={styles.controlsStack}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={
+                  isCapturing
+                    ? VI_STRINGS.camera.stopButton
+                    : VI_STRINGS.camera.startButton
+                }
+                onPress={handleToggleCapture}
+                style={({ pressed }) => [
+                  styles.primaryActionFull,
+                  {
+                    minHeight: theme.dimensions.primaryActionMinHeight,
+                    borderRadius: theme.radii.button,
+                    backgroundColor: isCapturing ? theme.colors.danger : theme.colors.primary,
+                    opacity: pressed ? 0.9 : 1,
+                    shadowColor: isCapturing ? '#B91C1C' : '#1D4ED8',
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 10,
+                    elevation: 4,
+                  },
+                ]}
+              >
+                <Ionicons
+                  name={isCapturing ? 'stop-circle' : 'play'}
+                  size={20}
+                  color={isCapturing ? theme.colors.onDanger : theme.colors.onPrimary}
+                />
+                <AppText
+                  variant="body"
+                  bold
+                  color={isCapturing ? theme.colors.onDanger : theme.colors.onPrimary}
+                >
+                  {isCapturing
+                    ? VI_STRINGS.camera.stopButton
+                    : VI_STRINGS.camera.startButton}
+                </AppText>
+              </Pressable>
+
+              <View style={styles.secondaryControlsRow}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={VI_STRINGS.camera.dropWordButton}
+                  onPress={() => {
+                    hapticLight();
+                    setSnapshot(flow.dropLastWord());
+                  }}
+                  style={({ pressed }) => [
+                    styles.secondaryActionBtn,
+                    {
+                      minHeight: theme.dimensions.minTouchTarget,
+                      borderRadius: theme.radii.button,
+                      backgroundColor: highContrast ? theme.colors.surface : '#FFFFFF',
+                      borderWidth: 1,
+                      borderColor: highContrast ? theme.colors.border : '#E2E8F0',
+                      opacity: pressed ? 0.88 : 1,
+                    },
+                  ]}
+                >
+                  <Ionicons name="backspace-outline" size={18} color={theme.colors.text} />
+                  <AppText variant="label" bold>
+                    {VI_STRINGS.camera.dropWordButton}
+                  </AppText>
+                </Pressable>
+
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={VI_STRINGS.camera.correctButton}
+                  disabled={!canCorrect}
+                  onPress={() => {
+                    hapticWarning();
+                    flow.correctLastSentence(Date.now());
+                    setSnapshot(flow.getSnapshot());
+                  }}
+                  style={({ pressed }) => [
+                    styles.secondaryActionBtn,
+                    {
+                      minHeight: theme.dimensions.minTouchTarget,
+                      borderRadius: theme.radii.button,
+                      backgroundColor: canCorrect
+                        ? theme.colors.warning
+                        : highContrast ? theme.colors.surface : '#F8FAFC',
+                      borderWidth: 1,
+                      borderColor: canCorrect
+                        ? theme.colors.warning
+                        : highContrast ? theme.colors.border : '#E2E8F0',
+                      opacity: !canCorrect ? 0.55 : pressed ? 0.88 : 1,
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    name="arrow-undo"
+                    size={18}
+                    color={canCorrect ? theme.colors.onPrimary : theme.colors.textMuted}
+                  />
+                  <AppText
+                    variant="label"
+                    bold
+                    color={canCorrect ? theme.colors.onPrimary : theme.colors.textMuted}
+                  >
+                    {VI_STRINGS.camera.correctButton}
+                  </AppText>
+                </Pressable>
+              </View>
+            </View>
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -525,8 +544,15 @@ const styles = StyleSheet.create({
     gap: 8,
     borderWidth: 1,
   },
+  sectionBlock: {
+    gap: 8,
+  },
+  sectionLabel: {
+    paddingHorizontal: 4,
+    letterSpacing: 0.4,
+  },
   cameraBox: {
-    minHeight: 280,
+    minHeight: 240,
     overflow: 'hidden',
   },
   composingPanel: {
@@ -553,12 +579,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  modifierPill: {
+  modifierGroup: {
+    gap: 6,
+    paddingTop: 4,
+  },
+  modifierRow: {
     flexDirection: 'row',
-    paddingHorizontal: 14,
+    gap: 8,
+  },
+  modifierPill: {
+    flex: 1,
+    flexDirection: 'row',
+    paddingHorizontal: 8,
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 5,
+    gap: 4,
   },
   noticeRow: {
     flexDirection: 'row',
@@ -580,18 +615,27 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
   },
-  controlsRow: {
-    flexDirection: 'row',
-    gap: 8,
+  controlsStack: {
+    gap: 10,
   },
-  controlBtn: {
+  primaryActionFull: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 8,
-    gap: 4,
+    gap: 8,
+    paddingHorizontal: 16,
   },
-  primaryControlBtn: {
-    // Intentionally empty — dynamic styles via inline style
+  secondaryControlsRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  secondaryActionBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
   },
 });
 

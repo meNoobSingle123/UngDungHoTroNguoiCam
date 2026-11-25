@@ -438,6 +438,16 @@ export default function CardsTab(): React.ReactElement {
           </AppText>
         </Pressable>
 
+        {/* Tiêu đề danh sách thẻ rõ ràng */}
+        <View style={styles.listHeaderRow}>
+          <AppText variant="caption" weight="600" color={theme.colors.textMuted}>
+            DANH SÁCH THẺ ({visibleCards.length})
+          </AppText>
+          <AppText variant="caption" color={theme.colors.textMuted} style={{ fontSize: 11 }}>
+            Chạm thẻ để phóng to
+          </AppText>
+        </View>
+
         {/* Danh sách thẻ giao tiếp Soft Card Tiles */}
         <FlatList
           data={visibleCards}
@@ -811,9 +821,16 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 4,
   },
+  listHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 4,
+    paddingTop: 2,
+  },
   listContent: {
     gap: 10,
-    paddingBottom: 96,
+    paddingBottom: 112,
   },
   emptyContainer: {
     alignItems: 'center',
