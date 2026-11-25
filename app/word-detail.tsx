@@ -354,7 +354,7 @@ export default function WordDetailScreen(): React.ReactElement {
                   styles.handIconRing,
                   {
                     transform: [{ scale: pulseAnim }],
-                    borderColor: isSimulatingAnim ? theme.colors.primary : '#CBD5E1',
+                    borderColor: isSimulatingAnim ? theme.colors.primary : theme.colors.border,
                     backgroundColor: highContrast ? theme.colors.surface : '#FFFFFF',
                   },
                 ]}
@@ -362,7 +362,7 @@ export default function WordDetailScreen(): React.ReactElement {
                 <Ionicons
                   name="hand-left"
                   size={52}
-                  color={isSimulatingAnim ? theme.colors.primary : '#64748B'}
+                  color={isSimulatingAnim ? theme.colors.primary : theme.colors.textMuted}
                 />
               </Animated.View>
 
@@ -386,9 +386,14 @@ export default function WordDetailScreen(): React.ReactElement {
             <View style={styles.speedToggleGroup}>
               <Pressable
                 accessibilityRole="button"
+                accessibilityLabel={VI_STRINGS.dictionary.speedNormal}
                 onPress={() => setIsSlowMotion(false)}
                 style={[
                   styles.speedBtn,
+                  {
+                    backgroundColor: highContrast ? theme.colors.bg : '#F8FAFC',
+                    borderColor: highContrast ? theme.colors.border : '#E2E8F0',
+                  },
                   !isSlowMotion && {
                     backgroundColor: theme.colors.primary,
                     borderColor: theme.colors.primary,
@@ -400,15 +405,20 @@ export default function WordDetailScreen(): React.ReactElement {
                   weight="600"
                   color={!isSlowMotion ? theme.colors.onPrimary : theme.colors.text}
                 >
-                  1.0x Chuẩn
+                  {VI_STRINGS.dictionary.speedNormal}
                 </AppText>
               </Pressable>
 
               <Pressable
                 accessibilityRole="button"
+                accessibilityLabel={VI_STRINGS.dictionary.speedSlow}
                 onPress={() => setIsSlowMotion(true)}
                 style={[
                   styles.speedBtn,
+                  {
+                    backgroundColor: highContrast ? theme.colors.bg : '#F8FAFC',
+                    borderColor: highContrast ? theme.colors.border : '#E2E8F0',
+                  },
                   isSlowMotion && {
                     backgroundColor: theme.colors.primary,
                     borderColor: theme.colors.primary,
@@ -420,26 +430,29 @@ export default function WordDetailScreen(): React.ReactElement {
                   weight="600"
                   color={isSlowMotion ? theme.colors.onPrimary : theme.colors.text}
                 >
-                  0.5x Chậm
+                  {VI_STRINGS.dictionary.speedSlow}
                 </AppText>
               </Pressable>
             </View>
 
             <Pressable
               accessibilityRole="button"
+              accessibilityLabel={VI_STRINGS.dictionary.replayButton}
               onPress={handleReplayGesture}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               style={({ pressed }) => [
                 styles.replayBtn,
                 {
                   backgroundColor: highContrast ? theme.colors.bg : '#F1F5F9',
+                  borderColor: highContrast ? theme.colors.border : 'transparent',
+                  borderWidth: highContrast ? 1 : 0,
                   opacity: pressed ? 0.7 : 1,
                 },
               ]}
             >
               <Ionicons name="refresh" size={16} color={theme.colors.text} />
               <AppText variant="caption" weight="600" color={theme.colors.text}>
-                Phát lại
+                {VI_STRINGS.dictionary.replayButton}
               </AppText>
             </Pressable>
           </View>
@@ -661,12 +674,24 @@ export default function WordDetailScreen(): React.ReactElement {
           ]}
         >
           <View style={styles.cardHeaderLeft}>
-            <Ionicons name="bulb-outline" size={18} color="#D97706" />
-            <AppText variant="caption" weight="700" color="#B45309">
-              GHI CHÚ HỌC VIÊN
+            <Ionicons
+              name="bulb-outline"
+              size={18}
+              color={highContrast ? theme.colors.warning : '#D97706'}
+            />
+            <AppText
+              variant="caption"
+              weight="700"
+              color={highContrast ? theme.colors.warning : '#B45309'}
+            >
+              {VI_STRINGS.dictionary.learnerNotesTitle}
             </AppText>
           </View>
-          <AppText variant="caption" color="#92400E" style={{ lineHeight: 20 }}>
+          <AppText
+            variant="caption"
+            color={highContrast ? theme.colors.text : '#92400E'}
+            style={{ lineHeight: 20 }}
+          >
             {currentDetail.notes}
           </AppText>
         </View>
@@ -674,6 +699,11 @@ export default function WordDetailScreen(): React.ReactElement {
         {/* Nút hành động chính: Bật Camera tập ký hiệu */}
         <Pressable
           accessibilityRole="button"
+          accessibilityLabel={
+            practicing
+              ? VI_STRINGS.dictionary.stopPracticeButton
+              : VI_STRINGS.dictionary.practiceButton
+          }
           onPress={() => setPracticing(!practicing)}
           style={({ pressed }) => [
             styles.practiceMainBtn,

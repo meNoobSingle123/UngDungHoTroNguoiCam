@@ -156,7 +156,7 @@ export default function DictionaryTab(): React.ReactElement {
             onChangeText={setQuery}
             placeholder={VI_STRINGS.dictionary.searchPlaceholder}
             placeholderTextColor={theme.colors.textMuted}
-            style={[styles.searchInput, { color: theme.colors.text }]}
+            style={[styles.searchInput, { color: theme.colors.text, fontSize: theme.fonts.subhead }]}
             returnKeyType="search"
           />
           {query.length > 0 && (

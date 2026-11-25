@@ -42,15 +42,29 @@ export function SosButton(): React.ReactElement {
         style={({ pressed }) => [
           styles.button,
           {
+            width: theme.dimensions.sosButtonSize,
+            height: theme.dimensions.sosButtonSize,
+            borderRadius: theme.dimensions.sosButtonSize / 2,
             backgroundColor: theme.sosColors.bg,
             transform: [{ scale: pressed ? 0.95 : 1 }],
           },
         ]}
       >
-        <AppText variant="caption" weight="700" color={theme.sosColors.text}>
+        <AppText variant="label" weight="700" color={theme.sosColors.text}>
           {state === 'arming' ? `${pct}%` : VI_STRINGS.sos.buttonLabel}
         </AppText>
       </Pressable>
+      {hint ? (
+        <AppText
+          variant="caption"
+          weight="600"
+          color={theme.colors.danger}
+          testID="sos-hint-text"
+          style={styles.hintText}
+        >
+          {hint}
+        </AppText>
+      ) : null}
     </View>
   );
 }
@@ -59,6 +73,7 @@ const styles = StyleSheet.create({
   wrapper: {
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 4,
     shadowColor: '#DC2626',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -66,12 +81,13 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   button: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
     borderColor: '#FFFFFF',
+  },
+  hintText: {
+    textAlign: 'center',
+    maxWidth: 120,
   },
 });

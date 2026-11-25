@@ -16,7 +16,7 @@ export function SosOverlay(): React.ReactElement | null {
   const active = state === 'active';
 
   useEffect(() => {
-    if (!active) {
+    if (!active || theme.reduceMotion) {
       setInvertPhase(false);
       return;
     }
@@ -24,7 +24,7 @@ export function SosOverlay(): React.ReactElement | null {
       setInvertPhase((prev) => !prev);
     }, SOS_FLASH_INTERVAL_MS);
     return () => clearInterval(id);
-  }, [active]);
+  }, [active, theme.reduceMotion]);
 
   if (!active) {
     return null;

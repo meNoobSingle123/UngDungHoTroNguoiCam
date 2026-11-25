@@ -1,11 +1,13 @@
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { AccessibilityInfo } from 'react-native';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { MockEngine } from '@sign/recognizer-mock';
 import { MockDebugPanel } from '@sign/recognizer-mock/debug-panel';
 import { SignCameraScreen } from '@sign/sign-ui/camera-screen';
 import { VI_STRINGS } from '../../src/core/i18n/vi.ts';
 import { useSystemStore } from '../../src/core/store/systemStatus.ts';
 import { ThemeProvider } from '../../src/core/theme/ThemeProvider.tsx';
+import { DIMENSIONS, SOS_COLORS } from '../../src/core/theme/tokens.ts';
 import { CameraModal } from '../../src/features/camera/CameraModal.tsx';
 import { OnboardingModal } from '../../src/features/onboarding/OnboardingModal.tsx';
 import { ConversationHistoryCard } from '../../src/features/communicate/ConversationHistoryCard.tsx';
@@ -14,6 +16,9 @@ import {
   OtherSpeechSheet,
   TypeSpeechSheet,
 } from '../../src/features/communicate/CommunicateSheets.tsx';
+import { SosButton } from '../../src/features/sos/SosButton.tsx';
+import { SosOverlay } from '../../src/features/sos/SosOverlay.tsx';
+import { useSosStore } from '../../src/features/sos/useSosStore.ts';
 import CommunicateTab from '../../app/(tabs)/index.tsx';
 import CardsTab from '../../app/(tabs)/cards.tsx';
 import DictionaryTab from '../../app/(tabs)/dictionary.tsx';
@@ -50,6 +55,9 @@ describe('UI Screens & MockEngine integration (Jest / RNTL)', () => {
       onboardingStatus: 'pending',
       permissionState: 'unknown',
       history: [],
+      isFlipped180: false,
+      highContrast: false,
+      reduceMotion: false,
     });
   });
 
@@ -282,6 +290,102 @@ describe('UI Screens & MockEngine integration (Jest / RNTL)', () => {
     await fireEvent.press(screen.getByTestId('dict-group-all'));
     expect(screen.getByText('NGUYÊN MẪU THAM CHIẾU (20 TỪ)')).toBeTruthy();
 
+    await unmount();
+  });
+
+  test('CommunicateTab enforces >=96dp big actions, 180 flip rotates whole dialogue body, and OtherSpeechSheet triggers haptic confirmation', async () => {
+    const haptics = require('expo-haptics');
+    haptics.notificationAsync.mockClear();
+
+    const { unmount } = await render(
+      <ThemeProvider>
+        <CommunicateTab />
+      </ThemeProvider>
+    );
+
+    // 3 numbered sections visible
+    expect(screen.getByText('1. HỘI THOẠI TRỰC TIẾP')).toBeTruthy();
+    expect(screen.getByText('2. CÂU PHẢN HỒI NHANH')).toBeTruthy();
+    expect(screen.getByText('3. CHỌN CÁCH GIAO TIẾP')).toBeTruthy();
+
+    // All 3 main action buttons meet DESIGN.md >= 96dp requirement
+    for (const id of ['open-camera-btn', 'open-type-sheet-btn', 'open-other-sheet-btn']) {
+      const btn = screen.getByTestId(id);
+      const flatStyle = Array.isArray(btn.props.style)
+        ? Object.assign({}, ...btn.props.style.filter(Boolean))
+        : btn.props.style;
+      expect(flatStyle.minHeight).toBeGreaterThanOrEqual(DIMENSIONS.bigActionMinHeight);
+    }
+
+    // 180 flip rotates entire dialogue-body container for natural reading order across table
+    await fireEvent.press(screen.getByTestId('flip-180-btn'));
+    const bodyStyle = screen.getByTestId('dialogue-body').props.style;
+    const flatBodyStyle = Array.isArray(bodyStyle)
+      ? Object.assign({}, ...bodyStyle.filter(Boolean))
+      : bodyStyle;
+    expect(flatBodyStyle.transform).toEqual([{ rotate: '180deg' }]);
+
+    await unmount();
+
+    // Deaf user feels haptic success when hearing partner submits reply
+    const onOther = jest.fn();
+    const { unmount: unmountSheet } = await render(
+      <ThemeProvider>
+        <OtherSpeechSheet visible onClose={() => {}} onSubmit={onOther} />
+      </ThemeProvider>
+    );
+    await fireEvent.changeText(screen.getByTestId('other-speech-input'), 'Chờ tôi một lát');
+    await fireEvent.press(screen.getByTestId('other-sheet-submit-btn'));
+    expect(haptics.notificationAsync).toHaveBeenCalledWith('Success');
+    await unmountSheet();
+  });
+
+  test('SosButton uses 56dp target with visual hold hint, and SosOverlay respects reduceMotion', async () => {
+    jest.useFakeTimers();
+    jest.spyOn(AccessibilityInfo, 'isReduceMotionEnabled').mockResolvedValueOnce(true);
+
+    const { unmount } = await render(
+      <ThemeProvider>
+        <SosButton />
+        <SosOverlay />
+      </ThemeProvider>
+    );
+
+    const sosBtn = screen.getByTestId('sos-button');
+    const flatSosStyle = Array.isArray(sosBtn.props.style)
+      ? Object.assign({}, ...sosBtn.props.style.filter(Boolean))
+      : sosBtn.props.style;
+    expect(flatSosStyle.width).toBe(DIMENSIONS.sosButtonSize);
+    expect(flatSosStyle.height).toBe(DIMENSIONS.sosButtonSize);
+
+    // Release early -> visual hint appears for deaf user
+    await fireEvent(sosBtn, 'pressIn');
+    await fireEvent(sosBtn, 'pressOut');
+    expect(screen.getByTestId('sos-hint-text')).toHaveTextContent(VI_STRINGS.sos.holdHint);
+
+    // Activate SOS with reduceMotion=true -> overlay does NOT invert/flash
+    await act(async () => {
+      useSosStore.setState({ state: 'active', progress: 1, hint: null });
+    });
+    const overlay = screen.getByTestId('sos-overlay');
+    const flatOverlayStyle = Array.isArray(overlay.props.style)
+      ? Object.assign({}, ...overlay.props.style.filter(Boolean))
+      : overlay.props.style;
+    expect(flatOverlayStyle.backgroundColor).toBe(SOS_COLORS.bg);
+
+    await act(async () => {
+      jest.advanceTimersByTime(1000);
+    });
+    const overlayAfter = screen.getByTestId('sos-overlay');
+    const flatAfter = Array.isArray(overlayAfter.props.style)
+      ? Object.assign({}, ...overlayAfter.props.style.filter(Boolean))
+      : overlayAfter.props.style;
+    expect(flatAfter.backgroundColor).toBe(SOS_COLORS.bg);
+
+    await fireEvent.press(screen.getByTestId('sos-stop-button'));
+    expect(useSosStore.getState().state).toBe('idle');
+
+    jest.useRealTimers();
     await unmount();
   });
 });

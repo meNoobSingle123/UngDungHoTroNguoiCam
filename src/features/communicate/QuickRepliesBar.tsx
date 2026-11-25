@@ -51,8 +51,8 @@ export function QuickRepliesBar({ onSelectReply }: QuickRepliesBarProps): React.
               },
             ]}
           >
-            <Ionicons name="flash" size={12} color={theme.colors.primary} />
-            <AppText variant="caption" weight="600" color={theme.colors.text}>
+            <Ionicons name="flash" size={14} color={theme.colors.primary} />
+            <AppText variant="label" weight="600" color={theme.colors.text}>
               {phrase}
             </AppText>
           </Pressable>
@@ -78,9 +78,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    borderRadius: 20,
+    minHeight: 48,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 24,
     borderWidth: 1,
     shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 2 },

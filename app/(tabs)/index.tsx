@@ -3,6 +3,7 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useKeepAwake } from 'expo-keep-awake';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { hapticLight } from '../../src/core/haptics/hapticFeedback.ts';
 import { VI_STRINGS } from '../../src/core/i18n/vi.ts';
 import { useSystemStore } from '../../src/core/store/systemStatus.ts';
 import { AppText, useAppTheme } from '../../src/core/theme/ThemeProvider.tsx';
@@ -85,10 +86,14 @@ export default function CommunicateTab(): React.ReactElement {
             accessibilityRole="button"
             accessibilityLabel={VI_STRINGS.communicate.actions.mySign}
             testID="open-camera-btn"
-            onPress={() => setCameraOpen(true)}
+            onPress={() => {
+              hapticLight();
+              setCameraOpen(true);
+            }}
             style={({ pressed }) => [
               styles.heroCard,
               {
+                minHeight: theme.dimensions.bigActionMinHeight,
                 backgroundColor: theme.colors.primary,
                 opacity: pressed ? 0.92 : 1,
               },
@@ -122,10 +127,14 @@ export default function CommunicateTab(): React.ReactElement {
               accessibilityRole="button"
               accessibilityLabel={VI_STRINGS.communicate.actions.typeText}
               testID="open-type-sheet-btn"
-              onPress={() => setTypeSheetOpen(true)}
+              onPress={() => {
+                hapticLight();
+                setTypeSheetOpen(true);
+              }}
               style={({ pressed }) => [
                 styles.actionTile,
                 {
+                  minHeight: theme.dimensions.bigActionMinHeight,
                   backgroundColor: highContrast ? theme.colors.surface : '#FFFFFF',
                   borderColor: highContrast ? theme.colors.border : 'rgba(226, 232, 240, 0.8)',
                   opacity: pressed ? 0.85 : 1,
@@ -157,10 +166,14 @@ export default function CommunicateTab(): React.ReactElement {
               accessibilityRole="button"
               accessibilityLabel={VI_STRINGS.communicate.actions.otherSpeaks}
               testID="open-other-sheet-btn"
-              onPress={() => setOtherSheetOpen(true)}
+              onPress={() => {
+                hapticLight();
+                setOtherSheetOpen(true);
+              }}
               style={({ pressed }) => [
                 styles.actionTile,
                 {
+                  minHeight: theme.dimensions.bigActionMinHeight,
                   backgroundColor: highContrast ? theme.colors.surface : '#FFFFFF',
                   borderColor: highContrast ? theme.colors.border : 'rgba(226, 232, 240, 0.8)',
                   opacity: pressed ? 0.85 : 1,

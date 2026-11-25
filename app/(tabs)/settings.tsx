@@ -581,7 +581,7 @@ export default function SettingsTab(): React.ReactElement {
               style={[
                 styles.compactInput,
                 {
-                  fontSize: 14,
+                  fontSize: theme.fonts.label,
                   color: theme.colors.text,
                   backgroundColor: highContrast ? theme.colors.bg : '#F8FAFC',
                   borderColor: highContrast ? theme.colors.border : '#E2E8F0',
@@ -685,7 +685,16 @@ export default function SettingsTab(): React.ReactElement {
             ) : null}
 
             {/* Cảnh báo miễn trừ 113/115 */}
-            <View style={styles.disclaimerBox}>
+            <View
+              style={[
+                styles.disclaimerBox,
+                {
+                  backgroundColor: highContrast ? theme.colors.bg : '#FEF2F2',
+                  borderColor: highContrast ? theme.colors.danger : 'transparent',
+                  borderWidth: highContrast ? 1 : 0,
+                },
+              ]}
+            >
               <Ionicons name="warning-outline" size={14} color={theme.colors.danger} />
               <AppText variant="caption" weight="500" color={theme.colors.danger} style={{ flex: 1 }}>
                 {VI_STRINGS.settings.emergencyDisclaimer}
@@ -1293,7 +1302,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    height: 40,
+    minHeight: 48,
     borderRadius: 14,
     borderWidth: 1,
     paddingHorizontal: 14,
@@ -1341,9 +1350,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#FEF2F2',
     paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingVertical: 8,
     borderRadius: 10,
   },
   accountRow: {

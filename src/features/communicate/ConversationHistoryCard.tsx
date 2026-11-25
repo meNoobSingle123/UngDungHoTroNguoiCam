@@ -58,7 +58,17 @@ export function ConversationHistoryCard(): React.ReactElement {
           </AppText>
         </View>
         {isFlipped180 ? (
-          <View style={styles.flipBadge} testID="flip-180-badge">
+          <View
+            style={[
+              styles.flipBadge,
+              {
+                backgroundColor: highContrast ? theme.colors.bg : '#EFF6FF',
+                borderColor: highContrast ? theme.colors.primary : 'transparent',
+                borderWidth: highContrast ? 1 : 0,
+              },
+            ]}
+            testID="flip-180-badge"
+          >
             <Ionicons name="sync" size={11} color={theme.colors.primary} />
             <AppText variant="caption" weight="600" color={theme.colors.primary}>
               Đang lật 180°
@@ -71,8 +81,14 @@ export function ConversationHistoryCard(): React.ReactElement {
         ) : null}
       </View>
 
-      {/* Nội dung tin nhắn */}
-      <View style={styles.dialogueBody}>
+      {/* Nội dung tin nhắn (lật nguyên khối để người đối diện đọc đúng thứ tự từ trên xuống) */}
+      <View
+        testID="dialogue-body"
+        style={[
+          styles.dialogueBody,
+          isFlipped180 ? { transform: [{ rotate: '180deg' }] } : undefined,
+        ]}
+      >
         {recentEntries.length === 0 ? (
           <View style={styles.emptyDialogue}>
             <View
@@ -106,7 +122,6 @@ export function ConversationHistoryCard(): React.ReactElement {
                 style={[
                   styles.bubbleRow,
                   isMe ? styles.bubbleRowMe : styles.bubbleRowOther,
-                  isFlipped180 ? { transform: [{ rotate: '180deg' }] } : undefined,
                 ]}
               >
                 {/* Avatar Người đối diện (bên trái) */}
@@ -332,7 +347,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#EFF6FF',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8,
@@ -410,9 +424,11 @@ const styles = StyleSheet.create({
   toolPill: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 5,
-    paddingHorizontal: 11,
-    paddingVertical: 6,
+    minHeight: 48,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderRadius: 12,
     borderWidth: 1,
   },

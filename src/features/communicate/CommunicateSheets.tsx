@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { hapticLight, hapticSuccess } from '../../core/haptics/hapticFeedback.ts';
 import { VI_STRINGS } from '../../core/i18n/vi.ts';
 import { AppText, useAppTheme } from '../../core/theme/ThemeProvider.tsx';
 
@@ -23,6 +24,7 @@ export function TypeSpeechSheet({
   const handleSpeak = () => {
     const trimmed = typedText.trim();
     if (trimmed) {
+      hapticLight();
       onSubmit(trimmed);
       setTypedText('');
     }
@@ -143,6 +145,7 @@ export function OtherSpeechSheet({
   const handleSubmit = () => {
     const trimmed = otherText.trim();
     if (trimmed) {
+      hapticSuccess();
       onSubmit(trimmed);
       setOtherText('');
     }

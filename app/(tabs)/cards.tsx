@@ -286,13 +286,18 @@ export default function CardsTab(): React.ReactElement {
             style={[
               styles.searchInput,
               {
-                fontSize: 14,
+                fontSize: theme.fonts.label,
                 color: theme.colors.text,
               },
             ]}
           />
           {query.length > 0 ? (
-            <Pressable onPress={() => setQuery('')}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Xóa tìm kiếm"
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              onPress={() => setQuery('')}
+            >
               <Ionicons name="close-circle" size={16} color={theme.colors.textMuted} />
             </Pressable>
           ) : null}
@@ -459,7 +464,12 @@ export default function CardsTab(): React.ReactElement {
           removeClippedSubviews={true}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <View style={styles.emptyIconCircle}>
+              <View
+                style={[
+                  styles.emptyIconCircle,
+                  { backgroundColor: highContrast ? theme.colors.surface : '#EFF6FF' },
+                ]}
+              >
                 <Ionicons name="albums-outline" size={32} color={theme.colors.textMuted} />
               </View>
               <AppText variant="caption" weight="500" color={theme.colors.textMuted}>
