@@ -388,4 +388,26 @@ describe('UI Screens & MockEngine integration (Jest / RNTL)', () => {
     jest.useRealTimers();
     await unmount();
   });
+
+  test('SettingsTab renders 4 coherent sections without fake auth bloat and manages local history', async () => {
+    useSystemStore.getState().addHistoryEntry('me', 'Tôi cần giúp đỡ');
+
+    const { unmount } = await render(
+      <ThemeProvider>
+        <SettingsTab />
+      </ThemeProvider>
+    );
+
+    expect(screen.getByText('1. HIỂN THỊ & DỄ NHÌN')).toBeTruthy();
+    expect(screen.getByText('2. GIỌNG ĐỌC TIẾNG VIỆT (OFFLINE)')).toBeTruthy();
+    expect(screen.getByText('3. KHẨN CẤP (SOS)')).toBeTruthy();
+    expect(screen.getByText('4. DỮ LIỆU & HƯỚNG DẪN')).toBeTruthy();
+    expect(screen.getByText('Đang lưu 1 câu hội thoại trên máy')).toBeTruthy();
+
+    await fireEvent.press(screen.getByTestId('settings-clear-history-btn'));
+    expect(useSystemStore.getState().history).toHaveLength(0);
+    expect(screen.getByText(VI_STRINGS.settings.historyEmpty)).toBeTruthy();
+
+    await unmount();
+  });
 });
